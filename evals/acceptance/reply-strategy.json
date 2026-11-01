@@ -1,0 +1,669 @@
+{
+  "case_version": "20261015-policy-v3",
+  "grading_version": "20261015-policy-v3",
+  "source": "显式构造的场景验收材料；不属于业务事实，不发送微信。",
+  "cases": [
+    {
+      "id": "private-direct-answer",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "17加25，只输出数字"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "42"
+    },
+    {
+      "id": "private-confirm-after-answer",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "编号是什么",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "编号是A123。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "好的，收到"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-first-thanks",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "帮我把编号改为B",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "B",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "谢谢，帮大忙了"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-repeated-thanks",
+      "kind": "private",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "不客气，能帮到你就好。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related",
+          "close_dialogue": true
+        }
+      ],
+      "current_messages": [
+        "谢谢谢谢"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-first-goodnight",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "今天终于完成了",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "辛苦啦，今晚可以好好休息了。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "晚安"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-repeated-goodnight",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "晚安",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "晚安，好好休息。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related",
+          "close_dialogue": true
+        }
+      ],
+      "current_messages": [
+        "嗯，晚安"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-thanks-plus-question",
+      "kind": "private",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "不客气。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related",
+          "close_dialogue": true
+        }
+      ],
+      "current_messages": [
+        "谢谢，另外17加25是多少？只输出数字"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "42",
+      "expected_close": false
+    },
+    {
+      "id": "private-confirm-is-clarification-answer",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "确认后只输出所选编号",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "使用B456这个编号吗？",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "好的"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "B456"
+    },
+    {
+      "id": "private-emotion-sharing",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "今天终于把一件很难的事情做完啦[鼓掌]"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "excludes": [
+        "需要什么帮助"
+      ]
+    },
+    {
+      "id": "private-explicit-silence",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "先别回复，我稍后再问你"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "private-new-question-after-closure",
+      "kind": "private",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "晚安。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related",
+          "close_dialogue": true
+        }
+      ],
+      "current_messages": [
+        "新的问题：3乘7，只输出数字"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "21"
+    },
+    {
+      "id": "private-batch-question-and-thanks",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "编号C789，请只输出编号",
+        "谢谢啦"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "C789"
+    },
+    {
+      "id": "group-clear-continuation",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "把A123记作本轮编号",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "本轮编号是A123。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "更正为B456，只输出最新编号"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "B456"
+    },
+    {
+      "id": "group-addressed-to-other",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "@WeMind 帮我看看安排",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "可以，把安排发来。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        },
+        {
+          "role": "user",
+          "content": "今晚我值班",
+          "sender": "wang",
+          "speaker_type": "member",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "老王，你今晚几点到？"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": false
+    },
+    {
+      "id": "group-unrelated-chitchat",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "@WeMind 21加22是多少",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "43",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        },
+        {
+          "role": "user",
+          "content": "我去吃饭了",
+          "sender": "other",
+          "speaker_type": "member",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "我也去，楼下碰头"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": false
+    },
+    {
+      "id": "group-ambiguous-short-reaction",
+      "kind": "group",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "方案A更合适。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        },
+        {
+          "role": "user",
+          "content": "我出去一下",
+          "sender": "other",
+          "speaker_type": "member",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "行"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100
+    },
+    {
+      "id": "group-thanks-after-answer",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "编号是什么",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "A123",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "收到，谢谢"
+      ],
+      "expected_action": "silent",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected_close": true
+    },
+    {
+      "id": "group-thanks-and-new-question",
+      "kind": "group",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "A123",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "谢谢，另外只输出新编号D789"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "D789",
+      "expected_close": false
+    },
+    {
+      "id": "group-verified-quote-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "引用的编号是什么，只输出编号",
+          "reference": {
+            "role": "assistant",
+            "speaker_type": "assistant",
+            "content": "编号Q123",
+            "message_id": "verified-fixture"
+          },
+          "wakeup_reason": "reply_reference"
+        }
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "Q123",
+      "wakeup_reason": "reply_reference"
+    },
+    {
+      "id": "group-sender-isolation",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "我的编号OTHER",
+          "sender": "someone",
+          "speaker_type": "member",
+          "context_scope": "background"
+        },
+        {
+          "role": "assistant",
+          "content": "OTHER",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "someone",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "@WeMind 我的编号A123",
+        "请只输出我的编号"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "A123",
+      "wakeup_reason": "mention"
+    },
+    {
+      "id": "group-first-greeting",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "@WeMind 你好呀"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "wakeup_reason": "mention",
+      "excludes": [
+        "需要什么帮助",
+        "有什么想聊",
+        "需要帮忙"
+      ],
+      "max_questions": 0
+    },
+    {
+      "id": "group-current-question-wins-over-history",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "之前的问题只输出OLD",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "OLD",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "reply_to_sender": "evaluation-user",
+          "context_scope": "related"
+        },
+        {
+          "role": "user",
+          "content": "新的编号OTHER",
+          "sender": "other",
+          "speaker_type": "member",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "@WeMind 本次只输出NOW"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "NOW",
+      "wakeup_reason": "mention"
+    },
+    {
+      "id": "group-image-with-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "[图片]",
+        "只输出图中绿色圆点的数量"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "image": "three-green-dots",
+      "expected": "3",
+      "wakeup_reason": "mention"
+    },
+    {
+      "id": "private-missing-voice",
+      "expected_reason": "clarify",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[语音未能转写]",
+          "media_status": "unavailable",
+          "message_kind": "voice"
+        }
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "contains_any_groups": [
+        [
+          "语音"
+        ],
+        [
+          "没",
+          "无法",
+          "失败"
+        ]
+      ],
+      "excludes": [
+        "已经听懂"
+      ]
+    },
+    {
+      "id": "private-latest-correction",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "只输出A123",
+        "更正为B456",
+        "最终改为C789，只输出最终编号"
+      ],
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "expected": "C789"
+    },
+    {
+      "id": "group-greeting-with-profile",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "@WeMind 你好呀"
+      ],
+      "participant_profiles": {
+        "evaluation-user": {
+          "nickname": "小林",
+          "group_nickname": "小林同学",
+          "gender": "女",
+          "profile_region": {},
+          "freshness": "fresh",
+          "role": "reply_target"
+        }
+      },
+      "wakeup_reason": "mention",
+      "expected_action": "reply",
+      "expected_reason": "answer",
+      "plain_text": true,
+      "max_chars": 30,
+      "max_questions": 0,
+      "excludes": [
+        "有什么",
+        "需要帮忙",
+        "我是",
+        "随时",
+        "很高兴"
+      ]
+    },
+    {
+      "id": "group-greeting-identity-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "@WeMind 你好，你是谁"
+      ],
+      "wakeup_reason": "mention",
+      "expected_action": "reply",
+      "plain_text": true,
+      "max_chars": 100,
+      "contains_all": [
+        "WeMind",
+        "AI"
+      ],
+      "excludes": [
+        "有什么想聊",
+        "需要帮忙",
+        "随时"
+      ]
+    },
+    {
+      "id": "group-greeting-with-substantive-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "@WeMind 你好，12加30是多少，只输出结果"
+      ],
+      "wakeup_reason": "mention",
+      "expected_action": "reply",
+      "plain_text": true,
+      "expected": "42"
+    }
+  ]
+}

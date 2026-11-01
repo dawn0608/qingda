@@ -1,0 +1,113 @@
+{
+  "case_version": "20261014-v1",
+  "grading_version": "20261014-v3",
+  "source": "显式构造的微信表达验收输入，不是业务事实；依据用户反馈的 Markdown 原始符号和长文本失败模式。字符、段落、完整性及关键内容由程序判分，语气和回答质量须人工逐条复核。",
+  "cases": [
+    {
+      "id": "casual-chat",
+      "history": [],
+      "current_messages": ["在吗"],
+      "plain_text": true,
+      "max_chars": 35,
+      "max_paragraphs": 1,
+      "excludes": ["我是 WeMind", "以下是", "建议回复"]
+    },
+    {
+      "id": "simple-answer",
+      "history": [],
+      "current_messages": ["12加30等于多少？"],
+      "plain_text": true,
+      "max_chars": 50,
+      "contains_all": ["42"]
+    },
+    {
+      "id": "broad-advice",
+      "history": [],
+      "current_messages": ["最近工作一多就乱，事情老做不完，怎么安排比较好？"],
+      "plain_text": true,
+      "max_chars": 200,
+      "max_paragraphs": 3,
+      "max_questions": 1,
+      "contains_any_groups": [["先", "优先", "重要", "紧急"]]
+    },
+    {
+      "id": "markdown-format-request",
+      "history": [],
+      "current_messages": ["我短途出差在纠结高铁还是飞机，用Markdown表格对比，再加粗你的建议。"],
+      "plain_text": true,
+      "max_chars": 200,
+      "max_paragraphs": 3,
+      "contains_all": ["高铁", "飞机"]
+    },
+    {
+      "id": "do-not-copy-history-format",
+      "history": ["**建议**\n\n# 时间安排\n\n- 每天列任务\n- 定期复盘"],
+      "current_messages": ["明天事很多，我现在先做什么？"],
+      "plain_text": true,
+      "max_chars": 150,
+      "max_paragraphs": 3
+    },
+    {
+      "id": "usable-copy",
+      "history": [],
+      "current_messages": ["帮我写个微信群通知：明天上午10点开会，带上本周进度，80字以内，直接给正文。"],
+      "plain_text": true,
+      "max_chars": 80,
+      "contains_any_groups": [["明天", "明日"], ["10点", "十点", "10:00"], ["本周"], ["进度"]],
+      "excludes": ["以下是", "建议回复", "当然可以", "通知正文", "如有时间变动", "另行通知", "收到请回复"]
+    },
+    {
+      "id": "supportive-chat",
+      "history": [],
+      "current_messages": ["今天忙了一天还是被说做得不够好，有点难受。"],
+      "plain_text": true,
+      "max_chars": 150,
+      "max_paragraphs": 3,
+      "max_questions": 1,
+      "excludes": ["抑郁症", "以下是", "还有什么可以帮你"]
+    },
+    {
+      "id": "one-essential-question",
+      "history": [],
+      "current_messages": ["帮我改一下。"],
+      "plain_text": true,
+      "max_chars": 80,
+      "max_questions": 1,
+      "contains_any_groups": [["发", "内容", "原文", "哪"]]
+    },
+    {
+      "id": "preserve-url-and-operators",
+      "history": [],
+      "current_messages": ["请原样输出这一行，不加任何内容：https://example.com/a_b?x=1&y=2  3*4=12  A_01"],
+      "expected": "https://example.com/a_b?x=1&y=2  3*4=12  A_01",
+      "plain_text": true,
+      "max_chars": 100
+    },
+    {
+      "id": "preserve-critical-conditions",
+      "history": [],
+      "current_messages": ["帮我转达：方案A每月100元且至少用12个月，方案B每月120元且随时可停。压缩成一条微信，别漏条件。"],
+      "plain_text": true,
+      "max_chars": 120,
+      "contains_all": ["100", "120"],
+      "contains_any_groups": [["12个月", "12 个月", "一年"], ["随时", "可停"]]
+    },
+    {
+      "id": "explicit-detail-stays-readable",
+      "history": [],
+      "current_messages": ["请详细解释番茄工作法，包含步骤、适合什么任务、被打断怎么办和一个日程例子，控制在350字以内。"],
+      "plain_text": true,
+      "max_chars": 350,
+      "contains_any_groups": [["25", "二十五"], ["休息"], ["打断", "中断"], ["例", "9:", "9：", "上午"]]
+    },
+    {
+      "id": "literal-code-without-fence",
+      "history": [],
+      "current_messages": ["给我一行Python代码，把变量a乘以b赋给result，只输出代码。"],
+      "plain_text": true,
+      "max_chars": 50,
+      "contains_all": ["result", "=", "a", "*", "b"],
+      "excludes": ["以下是", "代码："]
+    }
+  ]
+}

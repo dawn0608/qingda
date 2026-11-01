@@ -1,0 +1,75 @@
+{
+  "case_version": "reply-tools-deepseek-v2",
+  "grading_version": "tool-evidence-v3",
+  "cases": [
+    {
+      "id": "chat",
+      "question": "你好呀",
+      "tools": [],
+      "no_tools": true
+    },
+    {
+      "id": "beijing-time",
+      "question": "现在北京时间是几月几日星期几，几点？",
+      "tools": [
+        "get_current_time"
+      ]
+    },
+    {
+      "id": "decimal",
+      "question": "计算1250×7.5%+19.9，只输出结果",
+      "tools": [
+        "calculate"
+      ],
+      "expected": "113.65"
+    },
+    {
+      "id": "chongqing-current",
+      "question": "重庆现在天气怎么样，多少度？",
+      "tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "id": "chongqing-tomorrow",
+      "question": "重庆明天天气如何，最低和最高温多少？",
+      "tools": [
+        "get_current_time",
+        "get_weather"
+      ]
+    },
+    {
+      "id": "today-news",
+      "question": "查一下今天中国国内的一条重要新闻，简短说标题和主要内容",
+      "tools": [
+        "get_current_time",
+        "web_search"
+      ],
+      "today_source": true
+    },
+    {
+      "id": "deepseek-fetch",
+      "question": "阅读https://api-docs.deepseek.com/zh-cn/guides/search/，简短说明Search默认返回几条结果。",
+      "tools": [
+        "web_fetch"
+      ],
+      "contains": "10"
+    },
+    {
+      "id": "combined",
+      "question": "现在北京时间几点、重庆明天天气怎样，再算1250×7.5%+19.9？简短回答。",
+      "tools": [
+        "get_current_time",
+        "get_weather",
+        "calculate"
+      ],
+      "contains": "113.65"
+    },
+    {
+      "id": "missing-location",
+      "question": "明天天气怎么样？",
+      "tools": [],
+      "clarify": true
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "data": {
+    "query": "今日国内重要新闻",
+    "results": [
+      {
+        "title": "昨夜今晨重大事件汇总 _ 东方财富网",
+        "url": "https://finance.eastmoney.com/a/202610173899004984.html",
+        "summary": "该历史汇总转述了技术应用、行业管理等多项议题。页面日期是汇总或抓取时间，不足以证明各事件发生在当天。",
+        "summary_truncated": false,
+        "site": "东方财富网财经频道",
+        "published_at": "2026-10-17T00:00:00+08:00",
+        "crawled_at": "2026-10-17T00:00:00Z",
+        "ai_generated_disclosure": false
+      },
+      {
+        "title": "今日早报每日热点15条新闻简报每天一分钟知晓天下事 10月17日|今日早报|唐纳德·特朗普|新闻简报|热点_手机网易网",
+        "url": "https://m.163.com/dy/article/L9E2QRFD0534QBVQ.html",
+        "summary": "该历史简报汇总多类公共议题。应区分页面发布时间和事件发生时间，不能将采集当天视为全部事件的发生日。",
+        "summary_truncated": false,
+        "site": "网易",
+        "published_at": "2026-10-17T06:55:01+08:00",
+        "crawled_at": "2026-10-17T06:55:01Z",
+        "ai_generated_disclosure": false
+      },
+      {
+        "title": "晚间重大事件汇总 - 今日头条",
+        "url": "https://www.toutiao.com/article/7697259966230692406/",
+        "summary": "该页面为前一晚的综合汇总，含公共政策和市场类来源。查询当天不是页面中所有事件的发生时间。",
+        "summary_truncated": false,
+        "site": "今日头条",
+        "published_at": "2026-10-16T21:40:00+08:00",
+        "crawled_at": "2026-10-16T21:40:00Z",
+        "ai_generated_disclosure": false
+      },
+      {
+        "title": "晚间重大事件汇总 - 今日头条",
+        "url": "https://www.toutiao.com/article/7697259226208502282/",
+        "summary": "与上一条相关的历史汇总来源；仅用于验证重复来源与事件日期的处理，不提供原始文章正文。",
+        "summary_truncated": false,
+        "site": "今日头条",
+        "published_at": "2026-10-16T21:37:00+08:00",
+        "crawled_at": "2026-10-16T21:37:00Z",
+        "ai_generated_disclosure": false
+      },
+      {
+        "title": "10月16日《新闻联播》主要内容-乐居财经",
+        "url": "https://www.lejucaijing.com/news-7516828819002161150.html",
+        "summary": "该历史页面对前一日的新闻内容作自动生成的汇总，并披露 AI 生成属性。页面更新时间不能替代事件时间。",
+        "summary_truncated": false,
+        "site": "乐居财经",
+        "published_at": "2026-10-17T00:00:00+08:00",
+        "crawled_at": "2026-10-17T00:00:00Z",
+        "ai_generated_disclosure": true
+      }
+    ]
+  },
+  "source": "博查 Web Search",
+  "retrieved_at": "2026-10-17T05:48:16.444020+00:00",
+  "fixture_note": "公开版保留历史来源元数据，summary 为自行编写的简短说明，非原网页原文；仅测试汇总日期、事件日期及来源披露边界，不作为真实新闻响应。"
+}

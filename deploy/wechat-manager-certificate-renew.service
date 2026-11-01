@@ -1,0 +1,9 @@
+[Unit]
+Description=Renew managed certificates and reload native Nginx
+After=nginx.service network-online.target
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wechat-manager
+ExecStart=/opt/wechat-manager/.venv/bin/python /opt/wechat-manager/deploy/native_nginx.py renew
+TimeoutStartSec=330
+UMask=0077

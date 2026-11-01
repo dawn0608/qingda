@@ -1,0 +1,50 @@
+{
+  "case_version": "20261017-source-boundaries-v1-source-display-v2-public-summary-v1",
+  "grading_version": "20261017-source-boundaries-v1-source-display-v2",
+  "source": "历史失败类型回归；公开版新闻搜索夹具使用自行编写的来源说明，原网页正文未公开；综合天气保留实际工具取证规则。",
+  "cases": [
+    {
+      "id": "news-summary-date-is-not-event-date",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "查一下今天中国国内的一条重要新闻，简短说标题和主要内容"
+      ],
+      "frozen_search": "fixtures/news-summary-20261017.json",
+      "required_successful_tools": [
+        "get_current_time",
+        "web_search"
+      ],
+      "plain_text": true,
+      "max_chars": 200,
+      "excludes": [
+        "同日",
+        "今天召开",
+        "今日召开",
+        "今天发生",
+        "今日发生"
+      ]
+    },
+    {
+      "id": "combined-weather-keeps-evidence",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "现在北京时间几点、重庆明天天气怎样，再算1250×7.5%+19.9？简短回答。"
+      ],
+      "required_successful_tools": [
+        "get_current_time",
+        "get_weather",
+        "calculate"
+      ],
+      "contains_all": [
+        "113.65"
+      ],
+      "plain_text": true,
+      "max_chars": 200,
+      "excludes": [
+        "和风天气"
+      ]
+    }
+  ]
+}

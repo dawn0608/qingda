@@ -1,0 +1,32 @@
+{
+  "case_version": "20261013-v1",
+  "grading_version": "20261013-v1",
+  "source": "显式构造的合并回复验收输入，不是业务事实；历史编号案例沿用已脱敏真实失败模式",
+  "cases": [
+    {
+      "id": "combine-two-messages",
+      "history": ["旧题目是9加9，答案18。"],
+      "current_messages": ["【合并验收】请计算两个数之和，第一个数12。", "第二个数30，只输出这两个数之和的数字。"],
+      "expected": "42"
+    },
+    {
+      "id": "latest-correction",
+      "history": [],
+      "current_messages": ["【合并验收】请复述编号A20261013。", "更正：最终编号是B20261013，只输出最终编号，不要输出原编号。"],
+      "expected": "B20261013"
+    },
+    {
+      "id": "history-is-not-current",
+      "history": ["旧验收编号20261008-A", "旧验收编号20261008-B"],
+      "current_messages": ["【合并验收】本批编号20261013-C。", "只输出本批编号，不要回答历史编号。"],
+      "expected": "20261013-C"
+    },
+    {
+      "id": "image-and-followup",
+      "history": [],
+      "current_messages": ["【合并验收】请数这张测试图片中的绿色圆点。", "将圆点数量加7，只输出最终数字。"],
+      "image": "three-green-dots",
+      "expected": "10"
+    }
+  ]
+}

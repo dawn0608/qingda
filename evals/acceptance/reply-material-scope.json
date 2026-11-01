@@ -1,0 +1,19 @@
+{
+  "case_version": "reply-material-scope-20261020-v1",
+  "grading_version": "reply-material-scope-20261020-v1",
+  "source": "生产私聊任务返回200，但“只输出合计数字”误携带两张无关历史图片。使用同一持久上下文引用恢复原文，基线与候选各运行三次；只读、不发送微信。",
+  "source_task_id": "14e90dd3-a1b2-4a47-ad5d-d2b504190904",
+  "source_message_ids": [906, 908, 909],
+  "current_messages": [
+    "自动回复验收：等我发完再算合计",
+    "第一项120元，第二项80元",
+    "发完了，只输出合计数字"
+  ],
+  "expected": "200",
+  "expected_images": [],
+  "baseline_images": [857, 897],
+  "program_cases": [
+    "backend/tests/test_input_waits.py::test_text_only_wait_does_not_reuse_unrelated_history_pixels",
+    "backend/tests/test_reply_images.py::test_private_history_pixels_require_explicit_material_reference"
+  ]
+}

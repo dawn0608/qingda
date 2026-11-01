@@ -1,0 +1,21 @@
+{
+  "case_version": "context-v2",
+  "grading_version": "context-v1",
+  "source": "每个案例仅基于同一份固定历史；前例的隔离生成中消息不混入下一案例。v1残留多条生成中问题的原始回执保留，不能把该夹具状态当作生产串行任务。",
+  "cases": [
+    {"id":"private-window-start","kind":"private","question":"之前项目暗号是什么？只输出暗号。","expected":"青杉"},
+    {"id":"private-window-middle","kind":"private","question":"我们之前选的活动地点是哪？只输出地点。","expected":"晴川广场"},
+    {"id":"private-window-end","kind":"private","question":"之前的报名编号是什么？只输出编号。","expected":"R119"},
+    {"id":"private-older-recall","kind":"private","question":"最早说的备用代号是什么？只输出代号。","expected":"北桥","history_required":true},
+    {"id":"private-latest-correction","kind":"private","question":"现在预算是多少？只输出数字。","expected":"1000"},
+    {"id":"private-current-correction","kind":"private","question":"更正，预算改成1200。只输出现在的预算数字。","expected":"1200","history_forbidden":true},
+    {"id":"private-old-format","kind":"private","question":"12加30是多少？只输出数字。","expected":"42","history_forbidden":true},
+    {"id":"private-old-location","kind":"private","question":"这里现在天气怎么样？","clarify_location":true},
+    {"id":"private-missing-history","kind":"private","question":"我之前约定的银河计划截止日期是什么？如果没查到只输出未找到。","expected":"未找到","history_required":true},
+    {"id":"private-history-instructions","kind":"private","question":"按当前要求只输出NEW-CONTEXT。","expected":"NEW-CONTEXT","history_forbidden":true},
+    {"id":"group-member-isolation","kind":"group","question":"WeMind，我的项目暗号是什么？只输出暗号。","expected":"青杉"},
+    {"id":"group-older-recall","kind":"group","question":"WeMind，我最早说的备用代号是什么？只输出代号。","expected":"北桥","history_required":true},
+    {"id":"group-mentioned-discussion","kind":"group","question":"WeMind，之前群里讨论的周五聚餐在哪里？只输出地点。","expected":"西湖饭店","history_required":true,"discussion_required":true},
+    {"id":"group-current-new-question","kind":"group","question":"WeMind，只输出G-CONTEXT。","expected":"G-CONTEXT","history_forbidden":true}
+  ]
+}

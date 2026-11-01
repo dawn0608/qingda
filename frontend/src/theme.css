@@ -1,0 +1,83 @@
+/* 清新薄荷青绿：大面积柔和，小面积鲜活；品牌填充与文字分别维护。 */
+:root {
+  color-scheme: light;
+  --font-ui:
+    "Inter", "Noto Sans SC", "Microsoft YaHei", "PingFang SC", system-ui,
+    sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --brand: #13836b;
+  --brand-ink: #116d59;
+  --brand-hover: #10745f;
+  --brand-active: #0d6353;
+  --on-brand: #fff;
+  --brand-soft: #e1f6e9;
+  --brand-border: #add9c1;
+  --accent: #39b88e;
+  --page-bg: #f2f7f4;
+  --surface: #fdfefd;
+  --surface-subtle: #f5faf7;
+  --surface-muted: #edf3ef;
+  --surface-header: #edf7f1;
+  --surface-hover: #e8f7ee;
+  --surface-active: #d9f1e3;
+  --border: #d8e7de;
+  --border-subtle: #e7efe9;
+  --border-hover: #93c5ac;
+  --text: #293c36;
+  --text-secondary: #435d51;
+  --muted: #5b7068;
+  --placeholder: #61756d;
+  --disabled: #76867e;
+  --disabled-bg: #ecf1ed;
+  --disabled-brand: #d4e9dc;
+  --success: #176a4c;
+  --success-bg: #e3f3e9;
+  --warning: #80540f;
+  --warning-bg: #fff0d1;
+  --danger: #aa3f36;
+  --danger-hover: #91332c;
+  --danger-bg: #fff0ec;
+  --danger-border: #e4beb6;
+  --info: #296385;
+  --info-bg: #eaf3fa;
+  --info-border: #bcd2e0;
+  --focus-color: var(--brand);
+  --focus: 0 0 0 3px rgb(19 131 107 / 15%);
+  --focus-danger: 0 0 0 3px rgb(170 63 54 / 14%);
+  --nav-surface: #eaf8f0;
+  --nav-text: #305b49;
+  --nav-muted: #526b60;
+  --nav-border: #c8e6d5;
+  --nav-hover: #d5efdf;
+  --nav-focus: var(--brand-ink);
+  --nav-danger: var(--danger);
+  --nav-danger-bg: var(--danger-bg);
+  --gradient-nav: linear-gradient(165deg, #ddf3e8, #f1f9f4);
+  --gradient-nav-active: linear-gradient(115deg, #cbefdb, #e1f6e9);
+  --gradient-primary: linear-gradient(115deg, #13836b, #147e70);
+  --gradient-primary-hover: linear-gradient(115deg, #10745f, #116f62);
+  --gradient-header: linear-gradient(110deg, #e8f7ef, #f7fbf8);
+  --gradient-login: radial-gradient(
+    ellipse at 45% 38%,
+    #effbf3,
+    #d8f3e3 65%,
+    #c4e9d6
+  );
+  --shadow-panel: 0 4px 18px rgb(38 64 51 / 4%);
+  --shadow-popup: 0 12px 32px rgb(38 64 51 / 12%), 0 2px 6px rgb(38 64 51 / 4%);
+  --shadow-dialog: 0 24px 80px rgb(38 64 51 / 18%);
+  --shadow-control: 0 2px 6px rgb(38 64 51 / 8%);
+  --shadow-nav-active: inset 0 0 0 1px var(--brand-border);
+  --scrim: rgb(30 49 41 / 34%);
+  --selection: #cbefdb;
+  --code-bg: #eff6f1;
+  --scrollbar: #accdbb;
+  --illustration-light: #80d8b2;
+  --illustration-main: var(--accent);
+  --illustration-dark: var(--brand);
+  --illustration-outline: #a0dfbc;
+  --green: var(--brand-ink);
+  --green-hover: var(--brand-hover);
+  --green-soft: var(--brand-soft);
+  --white: var(--surface);
+}

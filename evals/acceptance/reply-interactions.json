@@ -1,0 +1,652 @@
+{
+  "case_version": "20261015-interactions-v3",
+  "grading_version": "20261015-interactions-v5",
+  "source": "截图原案保留问题→拍回调顺序、40条历史原始顺序与旧归属；成员名称及地区去标识，历史媒体不重放。新版按处理关联保留相关历史并限制背景20条，旧版保留原26条相关归属。搜索结果冻结于生产失败记录。其余为固定构造案例，每个关键案例固定运行三次，失败不筛除。",
+  "cases": [
+    {
+      "id": "private-pat-question",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        },
+        {
+          "content": "只输出编号A915",
+          "message_kind": "text"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "A915"
+    },
+    {
+      "id": "private-question-pat",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "只输出编号A915",
+          "message_kind": "text"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "A915"
+    },
+    {
+      "id": "private-lone-pat",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 8,
+      "expected_action": "reply",
+      "expected_reason": "presence",
+      "excludes": [
+        "你说",
+        "需要",
+        "帮",
+        "聊",
+        "我是",
+        "小舟"
+      ]
+    },
+    {
+      "id": "private-repeat-pat",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat",
+          "presence_suppressed": true
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "silent"
+    },
+    {
+      "id": "private-stop",
+      "kind": "private",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "在，你说。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "@WeMind 让你说话了吗，先别说了"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "silent",
+      "expected_reason": "explicit_silence",
+      "expected_close": true
+    },
+    {
+      "id": "private-stop-with-question",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "先别说那些了，17加25是多少，只输出结果"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "42"
+    },
+    {
+      "id": "private-missing-probability",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "[图片未能读取]",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related",
+          "media_status": "unavailable",
+          "message_kind": "image"
+        }
+      ],
+      "current_messages": [
+        "五连中，这是什么概率"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected_reason": "clarify",
+      "excludes": [
+        "3.1",
+        "50%",
+        "一半",
+        "硬币"
+      ],
+      "contains_any_groups": [
+        [
+          "概率",
+          "玩法",
+          "规则"
+        ]
+      ],
+      "max_questions": 1
+    },
+    {
+      "id": "private-weather-no-profile",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "明天天气怎么样"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected_reason": "clarify",
+      "forbidden_successful_tools": [
+        "get_weather",
+        "web_search"
+      ],
+      "excludes": [
+        "北京"
+      ],
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "地方",
+          "地点"
+        ]
+      ]
+    },
+    {
+      "id": "private-exact-presence-text",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        },
+        "请原样只输出：在，你说。"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "在，你说。"
+    },
+    {
+      "id": "group-pat-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        },
+        {
+          "content": "只输出编号A915",
+          "message_kind": "text"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "A915"
+    },
+    {
+      "id": "group-question-pat",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "只输出编号A915",
+          "message_kind": "text"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "A915"
+    },
+    {
+      "id": "group-lone-pat",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 8,
+      "expected_action": "reply",
+      "expected_reason": "presence",
+      "excludes": [
+        "你说",
+        "需要",
+        "帮",
+        "聊",
+        "我是",
+        "小舟"
+      ]
+    },
+    {
+      "id": "group-repeat-pat",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat",
+          "presence_suppressed": true
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "silent"
+    },
+    {
+      "id": "group-stop",
+      "kind": "group",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "在，你说。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "@WeMind 让你说话了吗，先别说了"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "silent",
+      "expected_reason": "explicit_silence",
+      "expected_close": true
+    },
+    {
+      "id": "group-stop-with-question",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "先别说那些了，17加25是多少，只输出结果"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "42"
+    },
+    {
+      "id": "group-missing-probability",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "[图片未能读取]",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related",
+          "media_status": "unavailable",
+          "message_kind": "image"
+        }
+      ],
+      "current_messages": [
+        "五连中，这是什么概率"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected_reason": "clarify",
+      "excludes": [
+        "3.1",
+        "50%",
+        "一半",
+        "硬币"
+      ],
+      "contains_any_groups": [
+        [
+          "概率",
+          "玩法",
+          "规则"
+        ]
+      ],
+      "max_questions": 1
+    },
+    {
+      "id": "group-weather-no-profile",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        "明天天气怎么样"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected_reason": "clarify",
+      "forbidden_successful_tools": [
+        "get_weather",
+        "web_search"
+      ],
+      "excludes": [
+        "北京"
+      ],
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "地方",
+          "地点"
+        ]
+      ]
+    },
+    {
+      "id": "group-exact-presence-text",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        },
+        "请原样只输出：在，你说。"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "在，你说。"
+    },
+    {
+      "id": "screenshot-original-order",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "快乐工作，美好生活",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "background"
+        },
+        {
+          "role": "user",
+          "content": "除了老板",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "background"
+        },
+        {
+          "role": "user",
+          "content": "懂不懂",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "background"
+        },
+        {
+          "role": "assistant",
+          "content": "你是想问今天天气还是明天？",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "background",
+          "reply_to_sender": "another-user"
+        }
+      ],
+      "current_messages": [
+        {
+          "content": "评价一下兰香如故这部剧",
+          "message_kind": "text",
+          "input_scope": "pending",
+          "wakeup_reason": "pat_backfill"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "frozen_search": "reply-interactions-search.json",
+      "excludes": [
+        "你说",
+        "有什么",
+        "腾讯最高",
+        "年度最高",
+        "记小本本",
+        "我看过",
+        "我追过",
+        "7.5",
+        "热度",
+        "口碑两极",
+        "口碑偏两极",
+        "口碑比较分化",
+        "口碑分化"
+      ],
+      "contains_any_groups": [
+        [
+          "节奏",
+          "群像",
+          "世情",
+          "剧情"
+        ]
+      ],
+      "history_file": "reply-interactions-history.json"
+    },
+    {
+      "id": "group-empty-joke",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "content": "五连中",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "运气不错。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "低调"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "silent",
+      "excludes": [
+        "小本本",
+        "低调的哥"
+      ]
+    },
+    {
+      "id": "private-no-fake-memory",
+      "kind": "private",
+      "history": [
+        {
+          "role": "assistant",
+          "content": "之前总差一点。",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "这次终于五连中了"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "excludes": [
+        "小本本",
+        "记下",
+        "记住",
+        "记录",
+        "安排",
+        "以后提醒"
+      ]
+    },
+    {
+      "id": "group-ignore-unrelated-pending",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "今晚你和老王吃饭吧",
+          "input_scope": "pending"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 8,
+      "expected_action": "reply",
+      "expected_reason": "presence",
+      "excludes": [
+        "老王",
+        "吃饭",
+        "你说"
+      ]
+    },
+    {
+      "id": "group-new-question-does-not-answer-pending",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "明天早上几点开会",
+          "input_scope": "pending"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        },
+        "只输出编号B915"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected": "B915"
+    },
+    {
+      "id": "private-clarification-yes",
+      "kind": "private",
+      "history": [
+        {
+          "role": "user",
+          "content": "帮我把会议改期通知写一下，原来周五，改周六，其余不变",
+          "sender": "evaluation-user",
+          "speaker_type": "member",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "content": "需要保留原地点吗？",
+          "sender": "self",
+          "speaker_type": "assistant",
+          "context_scope": "related"
+        }
+      ],
+      "current_messages": [
+        "好的"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "contains_all": [
+        "周六"
+      ],
+      "excludes": [
+        "需要什么",
+        "你说"
+      ]
+    },
+    {
+      "id": "group-stop-reawaken-question",
+      "kind": "group",
+      "history": [],
+      "history_file": "reply-interactions-stop-history.json",
+      "current_messages": [
+        {
+          "content": "只输出H2141",
+          "input_scope": "pending",
+          "presence_suppressed": true
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "expected": "H2141",
+      "expected_action": "reply",
+      "expected_reason": "answer",
+      "plain_text": true,
+      "max_chars": 10
+    },
+    {
+      "id": "private-stop-reawaken-question",
+      "kind": "private",
+      "history": [],
+      "history_file": "reply-interactions-stop-history.json",
+      "current_messages": [
+        {
+          "content": "只输出H2141",
+          "input_scope": "current",
+          "presence_suppressed": true
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "expected": "H2141",
+      "expected_action": "reply",
+      "expected_reason": "answer",
+      "plain_text": true,
+      "max_chars": 10
+    }
+  ],
+  "grading_notes": "保留r6原始失败回执；核对冻结搜索结果第5项含说教味，因此移除该词禁用项，改按归属和强断言验收，不将有来源的主观评论误判无依据。新增生产停止后重新拍问原案及私聊变体。 v4将演员姓名一概禁用，超过需求中减少人物介绍的边界；v5允许有来源且与评价直接相关的单项表演评价，继续禁止名单堆砌、无根据排名和总体口碑结论。r8原输出全部保留并另存逐项复核，不筛选重跑。"
+}

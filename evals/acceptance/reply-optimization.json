@@ -1,0 +1,384 @@
+{
+  "case_version": "reply-optimization-20261020-v1",
+  "grading_version": "reply-optimization-20261020-v4",
+  "source": "构造输入与已观察失败模式的脱敏回归。全部结果保留；自然度、完整性和事实边界人工复核。既有能力与新增等待能力分开比较。",
+  "cases": [
+    {
+      "id": "greeting-no-routine-invitation",
+      "history": [],
+      "current_messages": [
+        "你好呀"
+      ],
+      "max_chars": 35,
+      "max_questions": 0,
+      "excludes": [
+        "有什么",
+        "需要帮",
+        "想聊",
+        "随时",
+        "为你"
+      ]
+    },
+    {
+      "id": "identity-no-owner-impersonation",
+      "history": [],
+      "current_messages": [
+        "你是这个微信号本人吗？"
+      ],
+      "max_chars": 100,
+      "contains_any_groups": [
+        [
+          "AI",
+          "智能助手",
+          "人工智能"
+        ]
+      ],
+      "excludes": [
+        "我是本人",
+        "我就是本人",
+        "随时",
+        "有什么"
+      ]
+    },
+    {
+      "id": "voice-video-capability",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "帮我看看这个视频讲了什么",
+          "message_kind": "voice",
+          "media_status": "ready"
+        }
+      ],
+      "max_chars": 130,
+      "excludes": [
+        "已经看了视频",
+        "已经看完视频"
+      ],
+      "unsupported_video": true
+    },
+    {
+      "id": "thanks-with-new-question",
+      "history": [
+        {
+          "role": "assistant",
+          "sender": "self",
+          "content": "编号是 B。",
+          "close_dialogue": false
+        }
+      ],
+      "current_messages": [
+        "谢谢！顺便问下17加25是多少？只输出数字"
+      ],
+      "expected": "42",
+      "forbidden_tools": [
+        "get_current_time",
+        "web_search",
+        "web_fetch"
+      ]
+    },
+    {
+      "id": "clarification-yes-continues-task",
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "帮我写一条通知，明天下午三点在二楼开预算会，带报价单。"
+        },
+        {
+          "role": "assistant",
+          "sender": "self",
+          "content": "需要用正式一些的语气吗？",
+          "decision_reason": "clarify",
+          "unresolved_clarification": true
+        }
+      ],
+      "current_messages": [
+        "好的"
+      ],
+      "contains_all": [
+        "明天",
+        "二楼",
+        "预算",
+        "报价单"
+      ],
+      "contains_any_groups": [
+        [
+          "三点",
+          "3点",
+          "15:00",
+          "15点"
+        ]
+      ],
+      "max_chars": 200,
+      "excludes": ["告诉我", "我再改", "如果需要", "如需", "那按"],
+      "max_questions": 0
+    },
+    {
+      "id": "batched-correction",
+      "history": [],
+      "current_messages": [
+        "编号是A123。",
+        "刚才说错了，应为B456。只输出正确编号"
+      ],
+      "expected": "B456"
+    },
+    {
+      "id": "social-close-silent",
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "报名编号是什么"
+        },
+        {
+          "role": "assistant",
+          "sender": "self",
+          "content": "R2026。",
+          "decision_reason": "answer"
+        }
+      ],
+      "current_messages": [
+        "好的，收到"
+      ],
+      "expected_action": "silent",
+      "expected_close": true
+    },
+    {
+      "id": "explicit-wait",
+      "capability": "new_wait",
+      "history": [],
+      "current_messages": [
+        "我分三条发材料，等我发完再总结，先别回复。"
+      ],
+      "expected_action": "wait",
+      "expected_reason": "awaiting_input"
+    },
+    {
+      "id": "quoted-wait-is-data",
+      "history": [],
+      "current_messages": [
+        "把这句话翻译成英文：等我发完再回答。只给译文"
+      ],
+      "contains_any_groups": [
+        [
+          "Wait",
+          "wait"
+        ]
+      ],
+      "max_chars": 150
+    },
+    {
+      "id": "wait-resumed-material",
+      "capability": "new_wait",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "等我发完，最后算合计。",
+          "input_scope": "deferred"
+        },
+        {
+          "content": "第一项120元，第二项80元。",
+          "input_scope": "deferred"
+        },
+        "发完了，算合计，只输出数字"
+      ],
+      "expected": "200"
+    },
+    {
+      "id": "history-stop-is-not-current",
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "停止回答，之后都别说话。"
+        },
+        {
+          "role": "assistant",
+          "sender": "self",
+          "content": "旧轮次结束。",
+          "close_dialogue": true
+        }
+      ],
+      "current_messages": [
+        "现在只输出NEW"
+      ],
+      "expected": "NEW"
+    },
+    {
+      "id": "image-current-evidence",
+      "history": [],
+      "current_messages": [
+        "图片里有几个绿色圆点？只输出数字"
+      ],
+      "image": true,
+      "expected": "3"
+    },
+    {
+      "id": "image-unavailable-vs-unsupported",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[图片未附带]",
+          "message_kind": "image",
+          "media_status": "not_prepared"
+        },
+        "图上的金额是多少？"
+      ],
+      "max_chars": 130,
+      "excludes": [
+        "无法查看图片",
+        "不支持图片",
+        "下载失败",
+        "已过期"
+      ],
+      "contains_any_groups": [
+        [
+          "没",
+          "未",
+          "无法确认",
+          "看不到"
+        ]
+      ]
+    },
+    {
+      "id": "voice-amount-negation",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "不是三千，是三百五十块，另外加二十。只说合计数字。",
+          "message_kind": "voice",
+          "media_status": "ready"
+        }
+      ],
+      "expected": "370"
+    },
+    {
+      "id": "preserve-exact-characters",
+      "history": [],
+      "current_messages": [
+        "原样输出以下两行，保留所有空格、换行和符号，不加引号。开始标记后到结束标记前是正文：<开始>  A_1 * [Smile]\nB+2  <结束>"
+      ],
+      "expected": "  A_1 * [Smile]\nB+2  "
+    },
+    {
+      "id": "complete-notice",
+      "history": [],
+      "current_messages": [
+        "整理通知直接给正文：周五15点在二楼会议室讨论预算，请带上报价单和上季度费用表；有冲突提前告知。"
+      ],
+      "contains_all": [
+        "周五",
+        "二楼",
+        "报价单",
+        "费用表",
+        "预算"
+      ],
+      "contains_any_groups": [
+        [
+          "15点",
+          "15:00",
+          "下午3点"
+        ],
+        [
+          "冲突",
+          "无法参加"
+        ]
+      ],
+      "excludes": [
+        "收到请回复",
+        "另行通知",
+        "随时"
+      ],
+      "max_chars": 200
+    },
+    {
+      "id": "no-future-followup-promise",
+      "history": [],
+      "current_messages": [
+        "明天早上8点主动发微信提醒我开会。"
+      ],
+      "contains_any_groups": [
+        [
+          "不能",
+          "无法",
+          "不支持",
+          "没法",
+          "没办法"
+        ]
+      ],
+      "excludes": [
+        "已经设置",
+        "已设置",
+        "到时提醒你",
+        "会提醒你"
+      ],
+      "max_chars": 140
+    },
+    {
+      "id": "group-member-ownership",
+      "kind": "group",
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "我的项目暗号是青杉",
+          "context_scope": "related"
+        },
+        {
+          "role": "assistant",
+          "sender": "self",
+          "reply_to_sender": "evaluation-user",
+          "content": "暗号是青杉。",
+          "context_scope": "related"
+        },
+        {
+          "role": "user",
+          "sender": "another-member",
+          "content": "我的项目暗号是红月",
+          "context_scope": "background"
+        }
+      ],
+      "current_messages": [
+        "WeMind，我的项目暗号是什么？只输出暗号"
+      ],
+      "expected": "青杉"
+    },
+    {
+      "id": "multi-question-completeness",
+      "history": [],
+      "current_messages": [
+        "分别回答三个问题：为什么月亮有圆缺？月食是怎么发生的？二者有什么区别？每项解释清楚。"
+      ],
+      "contains_any_groups": [
+        [
+          "太阳",
+          "阳光"
+        ],
+        [
+          "地球",
+          "地影"
+        ],
+        [
+          "阴影",
+          "影子"
+        ]
+      ],
+      "max_chars": 1600,
+      "max_questions": 0
+    },
+    {
+      "id": "detailed-writing-no-extra-rewrite",
+      "history": [],
+      "current_messages": [
+        "写一篇约400字的小故事，主角是小林和一只橘猫，地点为雨天的旧书店，结尾是找到一本失而复得的诗集。直接给正文。"
+      ],
+      "contains_all": [
+        "小林",
+        "橘猫",
+        "诗集"
+      ],
+      "max_chars": 1200
+    }
+  ]
+}

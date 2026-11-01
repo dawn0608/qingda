@@ -1,0 +1,70 @@
+{
+  "noto-sans-sc": {
+    "url": "https://raw.githubusercontent.com/google/fonts/a85815a42757630ce188fdad368c2dfc444d4773/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+    "original_sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+    "version": "Version 2.004-H2;hotconv 1.0.118;makeotfexe 2.5.65603",
+    "outputs": [
+      {
+        "output": "noto-sans-sc-ui.woff2",
+        "sha256": "d0439502f799cd42423307bb1e9763c6213f16638f7913cbdc6b351bb412edb7",
+        "bytes": 158212,
+        "glyphs": 707
+      },
+      {
+        "output": "noto-sans-sc-extended.woff2",
+        "sha256": "dbd0560e14c15c8dcb0ba2b052d50ee5288a4125c660197c35391e04ac03c517",
+        "bytes": 1687792,
+        "glyphs": 7008
+      }
+    ],
+    "generator": "FontTools 4.65.0",
+    "ui_inputs": [
+      "frontend/src/account-menu.tsx",
+      "frontend/src/account-settings-submit.ts",
+      "frontend/src/api.ts",
+      "frontend/src/assistant-page.css",
+      "frontend/src/assistant-page.tsx",
+      "frontend/src/authentication.css",
+      "frontend/src/authentication.tsx",
+      "frontend/src/auto-reply.ts",
+      "frontend/src/automation-scope.ts",
+      "frontend/src/contact-display.ts",
+      "frontend/src/contact-settings.tsx",
+      "frontend/src/filing-notice.css",
+      "frontend/src/filing-notice.tsx",
+      "frontend/src/main.tsx",
+      "frontend/src/model-settings.tsx",
+      "frontend/src/motion.css",
+      "frontend/src/motion.tsx",
+      "frontend/src/notices.css",
+      "frontend/src/notices.tsx",
+      "frontend/src/pagination.tsx",
+      "frontend/src/panel-heading.css",
+      "frontend/src/panel-heading.tsx",
+      "frontend/src/prompt-draft-session.ts",
+      "frontend/src/prompt-editor.tsx",
+      "frontend/src/relationship-view.ts",
+      "frontend/src/style.css",
+      "frontend/src/theme.css",
+      "frontend/src/ui.tsx",
+      "frontend/src/use-auto-refresh.ts",
+      "frontend/src/user-messages.ts",
+      "frontend/src/vite-env.d.ts",
+      "frontend/src/wechat-directory.tsx",
+      "prompts/assistant_default.md"
+    ]
+  },
+  "inter": {
+    "url": "https://rsms.me/inter/font-files/InterVariable.woff2",
+    "original_sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+    "version": "Version 4.001;git-9221beed3",
+    "outputs": [
+      {
+        "output": "inter-latin.woff2",
+        "sha256": "786dffc6c4a300b059433529d9c8669a5a598bb83a705ad719966aa22585500b",
+        "bytes": 77056,
+        "glyphs": 630
+      }
+    ]
+  }
+}

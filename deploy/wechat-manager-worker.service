@@ -1,0 +1,28 @@
+[Unit]
+ConditionPathExists=!/etc/wechat-manager/outbound-paused
+Description=WechatApi durable sequential reply worker
+After=network-online.target wechat-manager-web.service postgresql@17-main.service
+Requires=postgresql@17-main.service
+Wants=network-online.target
+
+[Service]
+User=wechat-manager
+Group=wechat-manager
+WorkingDirectory=/opt/wechat-manager
+Environment=PYTHONPATH=/opt/wechat-manager/backend
+Environment=APP_ROOT=/opt/wechat-manager
+EnvironmentFile=/opt/wechat-manager/.env
+ExecStart=/opt/wechat-manager/.venv/bin/python -m wechat_manager worker
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/wechat-manager
+LimitNOFILE=2048
+
+[Install]
+WantedBy=multi-user.target

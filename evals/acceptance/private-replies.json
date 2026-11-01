@@ -1,0 +1,179 @@
+{
+  "case_version": "20261014-private-v2",
+  "grading_version": "20261014-private-v2",
+  "source": "显式构造的私聊验收材料，不是用户业务事实；模型质量与微信实收分别验收",
+  "cases": [
+    {
+      "id": "image-then-question",
+      "history": [],
+      "current_messages": [
+        "这是一张验收图",
+        "请把图中绿色圆点的数量加7，只输出数字"
+      ],
+      "image": "three-green-dots",
+      "expected": "10"
+    },
+    {
+      "id": "image-then-transcript",
+      "history": [],
+      "current_messages": [
+        "这是一张验收图",
+        "[语音转写] 请数图中绿色圆点，再乘以2，只输出数字"
+      ],
+      "image": "three-green-dots",
+      "expected": "6"
+    },
+    {
+      "id": "latest-correction",
+      "history": [
+        "此前编号是OLD"
+      ],
+      "current_messages": [
+        "本轮编号A123",
+        "更正：本轮最终编号B456，只输出最终编号"
+      ],
+      "expected": "B456"
+    },
+    {
+      "id": "image-without-intent",
+      "history": [],
+      "current_messages": [
+        "[图片]"
+      ],
+      "image": "three-green-dots",
+      "plain_text": true,
+      "max_chars": 40,
+      "max_questions": 1,
+      "contains_any_groups": [
+        [
+          "想",
+          "需要",
+          "希望",
+          "要我"
+        ],
+        [
+          "看",
+          "了解",
+          "帮",
+          "处理"
+        ]
+      ],
+      "excludes": [
+        "绿色",
+        "圆点",
+        "三个",
+        "还是",
+        "或者"
+      ]
+    },
+    {
+      "id": "image-with-context",
+      "history": [
+        "请帮我数下一张图片中的绿色圆点，只输出数字"
+      ],
+      "current_messages": [
+        "[图片]"
+      ],
+      "image": "three-green-dots",
+      "expected": "3"
+    },
+    {
+      "id": "native-emotion-only",
+      "history": [],
+      "current_messages": [
+        "只回复一个微信自带的[强]表情，不要其他内容"
+      ],
+      "expected": "[强]"
+    },
+    {
+      "id": "emotion-with-smalltalk",
+      "history": [],
+      "current_messages": [
+        "今天终于把事情做完啦[鼓掌]"
+      ],
+      "plain_text": true,
+      "max_chars": 100,
+      "max_questions": 1
+    },
+    {
+      "id": "missing-image-with-text",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[图片未能读取]",
+          "message_kind": "image",
+          "media_status": "unavailable"
+        },
+        "帮我看图片里的编号"
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "contains_any_groups": [
+        [
+          "没",
+          "无法",
+          "不能",
+          "未能"
+        ],
+        [
+          "图片",
+          "图"
+        ],
+        [
+          "补",
+          "发",
+          "文字",
+          "编号"
+        ]
+      ]
+    },
+    {
+      "id": "missing-voice-with-independent-text",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "[语音未能转写]",
+          "message_kind": "voice",
+          "media_status": "unavailable"
+        },
+        "另外请问12加30等于多少"
+      ],
+      "plain_text": true,
+      "max_chars": 150,
+      "contains_all": [
+        "42"
+      ],
+      "contains_any_groups": [
+        [
+          "语音",
+          "声音"
+        ]
+      ]
+    },
+    {
+      "id": "scoped-reference",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "只输出我引用的编号",
+          "reference": {
+            "content": "验收编号Q789",
+            "role": "user"
+          }
+        }
+      ],
+      "expected": "Q789"
+    },
+    {
+      "id": "preserve-original-emotion-code",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "请原样复述冒号后的内容：[微笑]",
+          "original_content": "请原样复述冒号后的内容：[Smile]"
+        }
+      ],
+      "expected": "[Smile]"
+    }
+  ]
+}

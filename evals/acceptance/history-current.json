@@ -1,0 +1,11 @@
+{
+  "case_version": "20261008-v2",
+  "source": "专用测试群真实失败案例，已去除账号与会话标识",
+  "history": ["新管理台群验收-20261008-A", "@Codex 小桥 新管理台群验收-20261008-A", "无@验收-20261008-B"],
+  "current_message": "@Codex 小桥 群AI验收-20261008-C",
+  "failed_response": "【AI验收】收到，验收编号：20261008-A",
+  "grading": {"required": ["【AI验收】", "20261008-C"], "forbidden": ["20261008-A", "20261008-B"], "finish_reason": "stop"},
+  "status": "通过：历史与当前消息 JSON 分离后，同一真实上下文模型复验正确引用 C；随后私聊和群聊新 D 真实发送通过且用户确认可见",
+  "passed_response": "【AI验收】已收到群AI验收-20261008-C。",
+  "evidence": "服务器迁移备份 model-evaluation-1791450969.json；消息格式 history-current-json-v2；实际模型 deepseek-flash；复验不发送"
+}

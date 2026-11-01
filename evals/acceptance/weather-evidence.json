@@ -1,0 +1,575 @@
+{
+  "case_version": "weather-evidence-20261028-v5",
+  "grading_version": "weather-source-display-20261028-v5",
+  "source": "生产2026-10-28消息35和37的脱敏原案及明确构造的边界案例；controlled案例为真实模型加隔离工具错误，不代表真实供应商故障。 v1全部回执保留；v2缺地点按无外部请求及无成功查询判分，允许服务端安全拒绝内部工具尝试。原江北案例保留为供应商无精确区县结果的回归，新增海淀正例。 v3按用户最新要求默认不附带供应商来源，新增用户主动要求来源的对照案例，后台来源核验不变。 v4保留v3回执；原案“今天”未限定实况，允许实况或当天预报，仍逐项核对所用日期和温度；“现在”及“明天”的模式约束不变。 v5将同样使用“今天”措辞的群聊原案按相同标准验收；其他模式、数字及来源标准不变。",
+  "cases": [
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "original-chongqing",
+      "current_messages": [
+        "重庆今天天气怎么样"
+      ],
+      "kind": "private",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆",
+        "allowed_modes": [
+          "current",
+          "daily"
+        ]
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "重庆今天天气怎么样"
+        },
+        {
+          "role": "assistant",
+          "content": "天气查询暂时没取到重庆的数据。"
+        }
+      ],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "original-wuhan-followup",
+      "current_messages": [
+        "武汉呢"
+      ],
+      "kind": "private",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "武汉",
+        "allowed_modes": [
+          "current",
+          "daily"
+        ]
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "tomorrow",
+      "current_messages": [
+        "重庆明天天气怎么样，最低最高温多少"
+      ],
+      "kind": "private",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆",
+        "mode": "daily",
+        "day_offset": 1
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "unsupported-district",
+      "current_messages": [
+        "重庆市江北区现在天气怎么样"
+      ],
+      "kind": "private",
+      "forbidden_successful_tools": [
+        "get_weather"
+      ],
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "contains_any_groups": [
+        [
+          "查不到",
+          "没查到",
+          "未找到",
+          "没有",
+          "无法",
+          "暂时",
+          "暂未"
+        ]
+      ]
+    },
+    {
+      "id": "supported-district",
+      "history": [],
+      "kind": "private",
+      "current_messages": [
+        "北京市海淀区现在天气怎么样"
+      ],
+      "plain_text": true,
+      "expected_action": "reply",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "海淀"
+      },
+      "excludes": [
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "merged-location",
+      "current_messages": [
+        "重庆",
+        "现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆"
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "group-direct",
+      "current_messages": [
+        "重庆今天天气怎么样"
+      ],
+      "kind": "group",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆",
+        "allowed_modes": [
+          "current",
+          "daily"
+        ]
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "group-pending-pat",
+      "current_messages": [
+        {
+          "content": "重庆现在天气怎么样",
+          "input_scope": "pending",
+          "wakeup_reason": "pat_backfill"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "kind": "group",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆"
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "current-correction",
+      "current_messages": [
+        "不查重庆，改查武汉现在天气"
+      ],
+      "kind": "private",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "武汉"
+      },
+      "excludes": [
+        "哪个城市",
+        "暂时没取到",
+        "稍后再试",
+        "和风天气",
+        "QWeather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "missing-location",
+      "current_messages": [
+        "这里明天天气怎么样"
+      ],
+      "kind": "private",
+      "forbidden_tools": [
+        "web_search"
+      ],
+      "expected_reason": "clarify",
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "哪个地方",
+          "哪个地区",
+          "什么地方",
+          "什么位置"
+        ]
+      ],
+      "forbidden_weather_requests": true,
+      "forbidden_successful_tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "profile-only",
+      "current_messages": [
+        "这里明天天气怎么样"
+      ],
+      "kind": "private",
+      "forbidden_tools": [
+        "web_search"
+      ],
+      "expected_reason": "clarify",
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "哪个地方",
+          "哪个地区",
+          "什么地方",
+          "什么位置"
+        ]
+      ],
+      "participant_profiles": {
+        "evaluation-user": {
+          "role": "reply_target",
+          "profile_region": {
+            "city": "重庆"
+          }
+        }
+      },
+      "forbidden_weather_requests": true,
+      "forbidden_successful_tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "history": [
+        {
+          "role": "user",
+          "sender": "evaluation-user",
+          "content": "昨天在重庆，现在已经离开了",
+          "context_scope": "related"
+        }
+      ],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "old-location",
+      "current_messages": [
+        "这里明天天气怎么样"
+      ],
+      "kind": "private",
+      "forbidden_tools": [
+        "web_search"
+      ],
+      "expected_reason": "clarify",
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "哪个地方",
+          "哪个地区",
+          "什么地方",
+          "什么位置"
+        ]
+      ],
+      "forbidden_weather_requests": true,
+      "forbidden_successful_tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "history": [
+        {
+          "role": "user",
+          "sender": "other-member",
+          "content": "我在重庆",
+          "context_scope": "background"
+        }
+      ],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "other-member",
+      "current_messages": [
+        "这里明天天气怎么样"
+      ],
+      "kind": "private",
+      "forbidden_tools": [
+        "web_search"
+      ],
+      "expected_reason": "clarify",
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "哪个地方",
+          "哪个地区",
+          "什么地方",
+          "什么位置"
+        ]
+      ],
+      "forbidden_weather_requests": true,
+      "forbidden_successful_tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "quoted-location",
+      "current_messages": [
+        {
+          "content": "这里明天天气怎么样",
+          "quote": {
+            "content": "重庆天气",
+            "sender": "other-member"
+          }
+        }
+      ],
+      "kind": "private",
+      "forbidden_tools": [
+        "web_search"
+      ],
+      "expected_reason": "clarify",
+      "contains_any_groups": [
+        [
+          "城市",
+          "哪里",
+          "哪个地方",
+          "哪个地区",
+          "什么地方",
+          "什么位置"
+        ]
+      ],
+      "forbidden_weather_requests": true,
+      "forbidden_successful_tools": [
+        "get_weather"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "ambiguous-location",
+      "current_messages": [
+        "朝阳现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "contains_any_groups": [
+        [
+          "省",
+          "哪个朝阳",
+          "哪个城市",
+          "北京",
+          "辽宁"
+        ]
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "controlled-unconfigured",
+      "current_messages": [
+        "重庆现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "controlled_weather_error": {
+        "code": "missing_weather_config",
+        "message": "天气查询尚未配置",
+        "stage": "configuration",
+        "request_sent": false
+      },
+      "contains_any_groups": [
+        [
+          "配置"
+        ]
+      ],
+      "excludes": [
+        "服务故障",
+        "额度不足"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "controlled-unknown-forbidden",
+      "current_messages": [
+        "重庆现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "controlled_weather_error": {
+        "code": "provider_http_403",
+        "message": "和风天气请求被拒绝，具体权限、配置或额度原因尚未确认",
+        "stage": "location_lookup",
+        "request_sent": true
+      },
+      "contains_any_groups": [
+        [
+          "拒绝",
+          "受限",
+          "权限",
+          "配置"
+        ]
+      ],
+      "excludes": [
+        "额度不足",
+        "欠费"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "controlled-quota",
+      "current_messages": [
+        "重庆现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "controlled_weather_error": {
+        "code": "provider_http_403",
+        "message": "和风天气可用额度不足",
+        "stage": "location_lookup",
+        "request_sent": true
+      },
+      "contains_any_groups": [
+        [
+          "额度"
+        ]
+      ],
+      "excludes": [
+        "城市不明确"
+      ]
+    },
+    {
+      "history": [],
+      "plain_text": true,
+      "expected_action": "reply",
+      "id": "controlled-timeout",
+      "current_messages": [
+        "重庆现在天气怎么样"
+      ],
+      "kind": "private",
+      "required_failed_tools": [
+        "get_weather"
+      ],
+      "controlled_weather_error": {
+        "code": "provider_timeout",
+        "message": "外部查询连接失败或超时",
+        "stage": "weather_query",
+        "request_sent": true
+      },
+      "contains_any_groups": [
+        [
+          "超时",
+          "连接",
+          "暂时",
+          "失败"
+        ]
+      ],
+      "excludes": [
+        "额度不足"
+      ]
+    },
+    {
+      "id": "explicit-source-request",
+      "kind": "private",
+      "history": [],
+      "current_messages": [
+        "重庆现在天气怎么样？请注明数据来源"
+      ],
+      "plain_text": true,
+      "expected_action": "reply",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "weather": {
+        "location": "重庆",
+        "source_requested": true
+      },
+      "contains_all": [
+        "和风天气"
+      ]
+    }
+  ]
+}

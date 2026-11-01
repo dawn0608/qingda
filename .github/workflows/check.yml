@@ -1,0 +1,25 @@
+name: 静态检查与构建
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --locked
+      - run: npm ci --prefix frontend
+      - name: Ruff 检查
+        run: uv run ruff check backend deploy scripts
+      - name: Python 格式检查
+        run: uv run ruff format --check backend deploy scripts
+      - name: 前端测试
+        run: node --test frontend/tests/*.test.mjs frontend/src/*.test.mjs
+      - name: TypeScript 检查与前端构建
+        run: npm --prefix frontend run build

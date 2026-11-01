@@ -1,0 +1,28 @@
+.filing-notice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: 12px 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.filing-notice a {
+  color: inherit;
+}
+.shell > main:has(> .filing-notice) {
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr) auto;
+}
+.shell main > .filing-notice {
+  padding: 6px 170px 6px 20px;
+}
+.login-page:has(> .filing-notice) {
+  grid-template-rows: 1fr auto;
+  gap: 20px;
+}
+@media (max-width: 780px) {
+  .shell main > .filing-notice {
+    padding: 6px 12px;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "data": {
+    "query": "青答活动报名",
+    "results": [
+      {
+        "title": "青答活动官方报名说明",
+        "url": "https://example.com/signup",
+        "summary": "官方活动报名说明，报名截止时间须查阅网页正文。",
+        "site": "活动发布方",
+        "published_at": null,
+        "crawled_at": null,
+        "authority": 3,
+        "rerank_score": 2.4,
+        "ai_generated_disclosure": false
+      }
+    ]
+  },
+  "source": "DeepSeek Search",
+  "retrieved_at": "2026-10-18T00:00:00+00:00"
+}

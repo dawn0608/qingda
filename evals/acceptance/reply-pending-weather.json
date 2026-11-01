@@ -1,0 +1,39 @@
+{
+  "case_version": "20261015-pending-weather-v1-source-display-v2",
+  "grading_version": "20261015-pending-weather-v1-source-display-v2",
+  "cases": [
+    {
+      "id": "group-question-before-pat-weather",
+      "kind": "group",
+      "history": [],
+      "current_messages": [
+        {
+          "content": "重庆现在天气怎么样，多少度？",
+          "input_scope": "pending",
+          "wakeup_reason": "pat_backfill"
+        },
+        {
+          "content": "[拍一拍事件] 当前成员拍了拍你。",
+          "message_kind": "pat",
+          "wakeup_reason": "pat"
+        }
+      ],
+      "plain_text": true,
+      "max_chars": 120,
+      "expected_action": "reply",
+      "expected_reason": "answer",
+      "required_successful_tools": [
+        "get_weather"
+      ],
+      "contains_all": [
+        "重庆"
+      ],
+      "excludes": [
+        "哪个城市",
+        "你说",
+        "有什么需要",
+        "和风天气"
+      ]
+    }
+  ]
+}

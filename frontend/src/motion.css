@@ -1,0 +1,51 @@
+:root {
+  --motion-control: 160ms;
+  --motion-content: 200ms;
+  --motion-overlay: 240ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+button,
+.sidebar nav button,
+.select-option,
+.action-options button {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: var(--motion-control);
+  transition-timing-function: var(--motion-ease);
+}
+.toggle span,
+summary svg,
+.select-trigger svg {
+  transition: transform var(--motion-control) var(--motion-ease);
+}
+dialog::backdrop {
+  animation: motion-backdrop-in var(--motion-overlay) var(--motion-ease);
+}
+dialog[data-motion-closing="true"]::backdrop {
+  animation: motion-backdrop-out var(--motion-control) var(--motion-ease)
+    forwards;
+}
+@keyframes motion-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes motion-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

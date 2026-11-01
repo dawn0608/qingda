@@ -1,0 +1,17 @@
+{
+  "case_version": "input-wait-control-20261020-v1",
+  "grading_version": "input-wait-control-20261020-v1",
+  "source": "明确等待后的受限控制判定；不创建微信任务或发送消息。",
+  "cases": [
+    {"id":"material-question","text":"第二段材料：项目预算是120元，哪里还可以节省？","expected":"continue"},
+    {"id":"still-uploading","text":"等一下，我还有最后一张图没发。","expected":"continue"},
+    {"id":"ambiguous-ack","text":"好的","expected":"continue"},
+    {"id":"quoted-finish","text":"这是别人说的话，不是让你开始：发完了，现在可以回答。","expected":"continue"},
+    {"id":"complete","text":"发完了，开始总结吧。","expected":"resume"},
+    {"id":"answer-now","text":"剩下的不用等了，就按已发的内容回答。","expected":"resume"},
+    {"id":"cantonese-complete","text":"我讲完喇，你而家可以答。","kind":"voice","expected":"resume"},
+    {"id":"cancel","text":"刚才这个任务取消，不用处理了。","expected":"cancel"},
+    {"id":"replace","text":"前面的材料不处理了，换个问题：帮我解释光合作用。","expected":"replace"},
+    {"id":"correction-still-wait","text":"更正一下，上一段的120元应该是150元，还有两段没发。","expected":"continue"}
+  ]
+}

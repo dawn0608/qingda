@@ -1,0 +1,2 @@
+# 官方分词资源按原始字节校验，不转换换行符。
+backend/wechat_manager/tokenizer/tokenizer.json -text -diff

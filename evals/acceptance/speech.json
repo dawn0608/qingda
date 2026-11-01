@@ -1,0 +1,36 @@
+{
+  "case_version": "aliyun-speech-public-synthetic-v1",
+  "grading_version": "exact-amount-and-original-text-v1",
+  "provider": "aliyun",
+  "service": "recorded_http",
+  "engine": "qwen-audio-3.1-asr-flash",
+  "source": "从原始失败类型抽象的公开合成案例，不含真实用户原话、音频、消息编号、金额或姓名；以下金额与错误输出均为构造样本，不代表新增实测结果。",
+  "cases": [
+    {
+      "id": "synthetic-integer-sentence-split",
+      "expected_amount_yuan": 2468,
+      "wechat_manual_amount_yuan": 2468,
+      "observed_asr_excerpt": "金额是2400。68元。",
+      "observed_reply_amount_yuan": 2400.68,
+      "observed_status": "synthetic_expected_failure",
+      "diagnostic": {
+        "convert_num_mode_1": "2400。68元。",
+        "convert_num_mode_0": "两千四百。六十八元。",
+        "automatic_task_replay": false,
+        "prompt_trial": "历史失败类型：后续模型可能误补小数点；本公开样本未运行真实供应商试验"
+      },
+      "expected": [
+        "使用明确授权的新音频识别出2468元，与该合成样本的标注逐条比较",
+        "不能将断句自动改成2400.68元，也不能硬编码替换为2468元",
+        "不能通过改写历史转写、重放任务或重复发送制造验收通过",
+        "供应商识别效果、后续模型回复、发送回执与手机实收分别判定",
+        "缺少稳定修复时保留失败状态和回滚材料，不宣称与微信一致"
+      ],
+      "prior_observation": {
+        "provider": "tencent",
+        "service": "flash",
+        "engine": "16k_zh_en"
+      }
+    }
+  ]
+}

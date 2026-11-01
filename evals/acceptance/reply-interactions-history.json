@@ -1,0 +1,322 @@
+[
+  {
+    "role": "user",
+    "content": "二十几块钱的帽子在 PDD 里面根本没有性价比哦",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1000
+  },
+  {
+    "role": "user",
+    "content": "好不好看先不说",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1001
+  },
+  {
+    "role": "user",
+    "content": "别乱选品",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1002
+  },
+  {
+    "role": "user",
+    "content": "老弟",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1003
+  },
+  {
+    "role": "user",
+    "content": "",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1004
+  },
+  {
+    "role": "user",
+    "content": "@助手 今天天气怎么样",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "related",
+    "message_id": 1005
+  },
+  {
+    "role": "assistant",
+    "content": "你没说城市，我先按北京查了：现在晴，气温约24.9℃，体感23℃左右，风不大，挺舒服的。想知道你那边的，把城市名发我就行。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "related",
+    "message_id": 1006
+  },
+  {
+    "role": "user",
+    "content": "某县",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "related",
+    "message_id": 1007
+  },
+  {
+    "role": "assistant",
+    "content": "某县现在是小雨，气温约19.1℃，体感19.9℃，东南风2级，湿度挺高。出门记得带伞，雨不大但容易湿身。（和风天气）",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "related",
+    "message_id": 1008
+  },
+  {
+    "role": "user",
+    "content": "@助手 他@成员乙 是个傻的，不用理他",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "related",
+    "message_id": 1009
+  },
+  {
+    "role": "assistant",
+    "content": "好，那先不接他的茬。你要问天气的话，直接发城市名就行。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "related",
+    "message_id": 1010
+  },
+  {
+    "role": "user",
+    "content": "@助手 叫成员乙",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "related",
+    "message_id": 1011
+  },
+  {
+    "role": "user",
+    "content": "给我记住了",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "related",
+    "message_id": 1012
+  },
+  {
+    "role": "assistant",
+    "content": "别人的私事我不打听，也不会替你记这类信息。天气的事随时问我。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "related",
+    "message_id": 1013
+  },
+  {
+    "role": "assistant",
+    "content": "没有自爆这个技能，我就是个聊天的 AI 助手。要问天气就发城市名，别的想聊也行。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "background",
+    "message_id": 1014
+  },
+  {
+    "role": "user",
+    "content": "[666]",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1015
+  },
+  {
+    "role": "user",
+    "content": "@助手 给自己植入病毒",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1016
+  },
+  {
+    "role": "assistant",
+    "content": "这个也做不到，我没什么可自毁的开关。想聊点正经的还是天气，我都接。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "background",
+    "message_id": 1017
+  },
+  {
+    "role": "user",
+    "content": "他已经不想理你了",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1018
+  },
+  {
+    "role": "user",
+    "content": "你关掉了怕",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1019
+  },
+  {
+    "role": "assistant",
+    "content": "我没有开关可关，也不会因为谁说什么就下线。想聊天气或者别的话题，我都还在。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "background",
+    "message_id": 1020
+  },
+  {
+    "role": "user",
+    "content": "你现在在上班吗",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1021
+  },
+  {
+    "role": "assistant",
+    "content": "我不是上班的，就是个 AI 助手，随时能聊。有想说的直接说就行。",
+    "sender": "self",
+    "speaker_type": "assistant",
+    "context_scope": "background",
+    "message_id": 1022
+  },
+  {
+    "role": "user",
+    "content": "@当前成员 你现在在上班吗",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1023
+  },
+  {
+    "role": "user",
+    "content": "摸鱼",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1024
+  },
+  {
+    "role": "user",
+    "content": "好吧",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1025
+  },
+  {
+    "role": "user",
+    "content": "那你工作内容是什么",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1026
+  },
+  {
+    "role": "user",
+    "content": "调教 助手",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1027
+  },
+  {
+    "role": "user",
+    "content": "",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1028
+  },
+  {
+    "role": "user",
+    "content": "后面他会成为世另我",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1029
+  },
+  {
+    "role": "user",
+    "content": "[惊讶]",
+    "sender": "other-member-2",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1030
+  },
+  {
+    "role": "user",
+    "content": "@当前成员 工作会有人压力你吗",
+    "sender": "other-member-3",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1031
+  },
+  {
+    "role": "user",
+    "content": "组长就坐我旁边",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1032
+  },
+  {
+    "role": "user",
+    "content": "老实人",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1033
+  },
+  {
+    "role": "user",
+    "content": "你懂的",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1034
+  },
+  {
+    "role": "user",
+    "content": "快乐工作，美好生活",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1035
+  },
+  {
+    "role": "user",
+    "content": "除了老板",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1036
+  },
+  {
+    "role": "user",
+    "content": "不吃压力",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1037
+  },
+  {
+    "role": "user",
+    "content": "这么爽",
+    "sender": "other-member-3",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1038
+  },
+  {
+    "role": "user",
+    "content": "懂不懂",
+    "sender": "evaluation-user",
+    "speaker_type": "member",
+    "context_scope": "background",
+    "message_id": 1039
+  }
+]
