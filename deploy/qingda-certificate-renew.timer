@@ -1,5 +1,5 @@
 [Unit]
-Description=Check Wechat manager certificates every 12 hours
+Description=青答 Qingda 每 12 小时检查证书
 [Timer]
 OnCalendar=*-*-* 00,12:00:00
 RandomizedDelaySec=300

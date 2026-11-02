@@ -16,7 +16,7 @@ from .worker import Worker
 
 
 def main():
-    parser = argparse.ArgumentParser(description="WechatApi 管理台运维命令")
+    parser = argparse.ArgumentParser(description="青答 Qingda 运维命令")
     sub = parser.add_subparsers(dest="command", required=True)
     serve = sub.add_parser("serve")
     serve.add_argument("--port", type=int, default=17950)
@@ -47,7 +47,7 @@ def main():
         return
     store = Store(config.database_url)
     if args.command == "worker":
-        if Path("/etc/wechat-manager/outbound-paused").exists():
+        if Path(os.getenv("OUTBOUND_PAUSE_FILE", "/etc/qingda/outbound-paused")).exists():
             store.close()
             return
         manager = Manager(store, Vault(config.key_file))

@@ -13,11 +13,9 @@ import time
 from dotenv import dotenv_values
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from layout import APP, CONFIG, DATA, ROOT
 from proxy import backup_state
 from storage_retention import configured, register, sha, storage_lock
-
-APP = pathlib.Path("/opt/wechat-manager")
-ROOT = pathlib.Path("/var/backups/wechat-manager")
 
 
 def backup():
@@ -34,12 +32,12 @@ def backup():
         register(folder, "daily", "preparing")
         backup_database(url, folder / "manager.dump")
         for key, default, name in [
-            ("MASTER_KEY_FILE", "/etc/wechat-manager/master.key", "master.key"),
+            ("MASTER_KEY_FILE", str(CONFIG / "master.key"), "master.key"),
         ]:
             shutil.copy2(values.get(key) or default, folder / name)
         shutil.copy2(APP / ".env", folder / "root-env")
         with tarfile.open(folder / "attachments.tar.gz", "w:gz") as archive:
-            data = pathlib.Path(values.get("DATA_DIR") or "/var/lib/wechat-manager")
+            data = pathlib.Path(values.get("DATA_DIR") or str(DATA))
             for name in ("attachments", "incoming-media"):
                 if (data / name).exists():
                     archive.add(data / name, arcname=name)

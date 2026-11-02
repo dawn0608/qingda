@@ -1,0 +1,9 @@
+[Unit]
+Description=青答 Qingda 证书续期与 Nginx 重载
+After=nginx.service network-online.target
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/qingda
+ExecStart=/opt/qingda/.venv/bin/python /opt/qingda/deploy/native_nginx.py renew
+TimeoutStartSec=330
+UMask=0077

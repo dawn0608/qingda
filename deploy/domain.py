@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from dotenv import dotenv_values
+from layout import CONFIG, unit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from native_nginx import CERTBOT, WEBROOT, folder_path, render_domain, run
@@ -23,8 +24,8 @@ from storage_retention import register, save_json, sha, storage_lock
 
 sys.path.append(str(APP / "backend"))
 
-PAUSE = Path("/etc/wechat-manager/outbound-paused")
-CURRENT = Path("/etc/wechat-manager/domain-switch.json")
+PAUSE = CONFIG / "outbound-paused"
+CURRENT = CONFIG / "domain-switch.json"
 DOMAIN = "example.com"
 ORIGIN = "https://" + DOMAIN
 LINEAGE = ACME / "certbot/live" / DOMAIN.replace(".", "-")
@@ -120,12 +121,12 @@ def pause(folder):
     if query("SELECT count(*) FROM tasks WHERE state IN ('generating','preparing','ready','sending')")[0][0]:
         raise RuntimeError("仍有活动发送任务，等待完成后重新停站")
     save(folder, state, "pausing")
-    dropin = Path("/etc/systemd/system/wechat-manager-worker.service.d/domain-pause.conf")
+    dropin = Path("/etc/systemd/system") / (unit("worker.service.d")) / "domain-pause.conf"
     dropin.parent.mkdir(parents=True, exist_ok=True)
-    write(dropin, "[Unit]\nConditionPathExists=!/etc/wechat-manager/outbound-paused\n", 0o644)
+    write(dropin, "[Unit]\nConditionPathExists=!" + str(CONFIG / "outbound-paused") + "\n", 0o644)
     run("systemctl", "daemon-reload")
     save_json(PAUSE, dict(folder=str(folder), domain=DOMAIN, paused_at=time.time()))
-    run("systemctl", "stop", "wechat-manager-worker")
+    run("systemctl", "stop", unit("worker"))
     if query("SELECT count(*) FROM tasks WHERE state IN ('generating','preparing','ready','sending')")[0][0]:
         raise RuntimeError("停站边界存在待核实任务，保持Worker停止并核对")
     Gateway().put(render_domain(DOMAIN, "paused"))
@@ -203,7 +204,7 @@ def activate(folder):
         )
     )
     Gateway().put(render_domain(DOMAIN))
-    run("systemctl", "restart", "wechat-manager-web")
+    run("systemctl", "restart", unit("web"))
     state.setdefault("event_floor", query("SELECT coalesce(max(id),0) FROM events")[0][0])
     state.setdefault("activated_at", time.time())
     save(folder, state, "binding")
@@ -301,7 +302,7 @@ def resume(folder):
         raise ValueError("停站标记归属变化")
     save(folder, state, "resuming")
     PAUSE.unlink(missing_ok=True)
-    run("systemctl", "start", "wechat-manager-worker")
+    run("systemctl", "start", unit("worker"))
     from update import wait_health, wait_runtimes
 
     release = json.loads((APP / "release.json").read_text())

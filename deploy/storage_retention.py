@@ -15,10 +15,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from dotenv import dotenv_values
+from layout import APP, LOCK, ROOT
 
-ROOT = Path("/var/backups/wechat-manager")
-LOCK = Path("/run/lock/wechat-manager-release.lock")
-APP = Path("/opt/wechat-manager")
 RELEASE_FILES = {
     "source.tar.gz",
     "manager-before.dump",
@@ -52,6 +50,11 @@ def save_json(path, value):
         os.fsync(stream.fileno())
     temporary.chmod(0o600)
     os.replace(temporary, path)
+    directory = os.open(Path(path).parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 def register(path, kind, state, reason=""):

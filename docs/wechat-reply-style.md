@@ -30,7 +30,7 @@ python scripts/sync_assistant_prompts.py apply --snapshot <同一快照> --sha25
 在生产服务器沿用已配置的 DeepSeek `deepseek-flash`、当前账号提示词和部署模板运行：
 
 ```sh
-PYTHONPATH=/opt/wechat-manager/backend /opt/wechat-manager/.venv/bin/python /opt/wechat-manager/scripts/evaluate_reply_batches.py --user-id 1 --account-id 3 --case-file /opt/wechat-manager/evals/acceptance/wechat-reply-style.json --output /var/backups/wechat-manager/<本次验收目录>
+PYTHONPATH=/opt/qingda/backend /opt/qingda/.venv/bin/python /opt/qingda/scripts/evaluate_reply_batches.py --user-id 1 --account-id 3 --case-file /opt/qingda/evals/acceptance/wechat-reply-style.json --output /var/backups/qingda/<本次验收目录>
 ```
 
 程序逐项检查完整结束、纯文本、字符与段落数量，以及案例要求的关键内容；逐条人工复核回答是否自然、准确且有用。回执保留案例、判分版本、案例文件哈希、部署提交、模板及账号提示词哈希、模型、生成结果和用量。沿用默认案例文件重新验证合并消息的四个固定案例。

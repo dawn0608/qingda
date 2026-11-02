@@ -17,19 +17,19 @@ def routes():
     proxy_next_upstream off;
 """
     return (
-        """# wechat-manager: 原生 Nginx 业务路由
+        """# qingda: 原生 Nginx 业务路由
 access_log off;
 error_log /dev/null crit;
 location = /wechat { return 302 /wechat/; }
 location ^~ /wechat/ {
-  access_log /var/log/nginx/wechat-manager_access.log wechat_manager_safe;
+  access_log /var/log/nginx/qingda_access.log qingda_safe;
   client_max_body_size 16m;
 """
         + common
         + """
 }
 location ^~ /wechatapi/callback/ {
-  access_log /var/log/nginx/wechat-manager-callback_access.log wechat_manager_safe;
+  access_log /var/log/nginx/qingda-callback_access.log qingda_safe;
   client_max_body_size 16m;
   client_body_timeout 5s;
   proxy_pass http://"""

@@ -1,0 +1,29 @@
+[Unit]
+ConditionPathExists=!/etc/qingda/outbound-paused
+Description=青答 Qingda 回复 Worker
+After=network-online.target qingda-web.service postgresql@17-main.service
+Requires=postgresql@17-main.service
+Wants=network-online.target
+
+[Service]
+User=qingda
+Group=qingda
+WorkingDirectory=/opt/qingda
+Environment=PYTHONPATH=/opt/qingda/backend
+Environment=APP_ROOT=/opt/qingda
+Environment=OUTBOUND_PAUSE_FILE=/etc/qingda/outbound-paused
+EnvironmentFile=/opt/qingda/.env
+ExecStart=/opt/qingda/.venv/bin/python -m wechat_manager worker
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/qingda
+LimitNOFILE=2048
+
+[Install]
+WantedBy=multi-user.target

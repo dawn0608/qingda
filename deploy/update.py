@@ -19,12 +19,11 @@ from urllib.request import Request, urlopen
 from dotenv import dotenv_values
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from layout import APP, CONFIG, DATA, ROOT, check_rollback_layout, service_template, unit
 from proxy import Gateway, backup_state, health_url
 from storage_retention import register, sha, storage_lock
 
-APP = pathlib.Path("/opt/wechat-manager")
-ROOT = pathlib.Path("/var/backups/wechat-manager")
-UNITS = ["wechat-manager-worker", "wechat-manager-web"]
+UNITS = [unit("worker"), unit("web")]
 SCHEMA_VERSION = 59
 OPERATION_LOG = None
 
@@ -74,7 +73,7 @@ def verify_api_auth(public_url):
 
 
 def rollback_units(app=APP):
-    return ["wechat-manager-web", "wechat-manager-worker"]
+    return [unit("web"), unit("worker")]
 
 
 def progress(stage):
@@ -93,7 +92,7 @@ def command(args, env=None, timeout=120):
 
 
 def pg_url(database, role="migration"):
-    values = json.loads(pathlib.Path("/etc/wechat-manager/postgres-credentials.json").read_text())
+    values = json.loads((CONFIG / "postgres-credentials.json").read_text())
     return "postgresql://wechat_manager_" + role + ":" + values[role] + "@127.0.0.1:5432/" + database
 
 
@@ -242,12 +241,12 @@ def backup_files(stage, old):
     (stage / "files/.env").chmod(0o600)
     values = dotenv_values(APP / ".env")
     for key, default, name in [
-        ("MASTER_KEY_FILE", "/etc/wechat-manager/master.key", "master.key"),
+        ("MASTER_KEY_FILE", str(CONFIG / "master.key"), "master.key"),
     ]:
         shutil.copy2(values.get(key) or default, stage / name)
         (stage / name).chmod(0o600)
     with tarfile.open(stage / "attachments.tar.gz", "w:gz") as archive:
-        data = pathlib.Path(values.get("DATA_DIR") or "/var/lib/wechat-manager")
+        data = pathlib.Path(values.get("DATA_DIR") or str(DATA))
         for name in ("attachments", "incoming-media"):
             if (data / name).exists():
                 archive.add(data / name, arcname=name)
@@ -346,9 +345,7 @@ def wait_runtimes(url, revision, timeout=150):
         records = {name: (rev, pid) for name, rev, pid in rows}
         ready = True
         for name in ("web", "worker"):
-            pid = int(
-                command(["systemctl", "show", "wechat-manager-" + name, "--property=MainPID", "--value"])
-            )
+            pid = int(command(["systemctl", "show", unit(name), "--property=MainPID", "--value"]))
             ready = ready and pid > 0 and records.get(name) == (revision, pid)
         if ready:
             return
@@ -383,9 +380,11 @@ def release(
     prepared=None,
     rehearsal_database="wechat_manager_rehearsal",
     rollback_schema=None,
+    worker_active=None,
 ):
     global OPERATION_LOG
-    paused = pathlib.Path("/etc/wechat-manager/outbound-paused").exists()
+    paused = (CONFIG / "outbound-paused").exists()
+    run_worker = not paused and worker_active is not False
     os.umask(63)
     stage = ROOT / ("chat-release-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()))
     stage.mkdir(mode=448)
@@ -434,17 +433,17 @@ def release(
     source_mutating = False
     try:
         if not paused or callback_enabled:
-            envfile = pathlib.Path("/etc/wechat-manager/migration-buffer.env")
+            envfile = CONFIG / "migration-buffer.env"
             envfile.write_text("DATABASE_URL=" + url + "\n")
             envfile.chmod(384)
             command(
                 [
                     "systemd-run",
-                    "--unit=wechat-manager-migration-inbox",
+                    "--unit=" + unit("migration-inbox"),
                     "--collect",
                     "--property=EnvironmentFile=" + str(envfile),
                     "--property=TimeoutStopSec=30",
-                    "--setenv=APP_ROOT=/opt/wechat-manager",
+                    "--setenv=APP_ROOT=" + str(APP),
                     "--setenv=PYTHONPATH=" + str(candidate / "backend"),
                     python,
                     "-m",
@@ -477,8 +476,8 @@ def release(
             drain_replies(python, candidate)
             progress("replies_drained")
         command(["systemctl", "stop", *UNITS], timeout=90)
-        for unit in UNITS:
-            if command(["systemctl", "show", unit, "--property=MainPID", "--value"]).strip() != b"0":
+        for service in UNITS:
+            if command(["systemctl", "show", service, "--property=MainPID", "--value"]).strip() != b"0":
                 raise RuntimeError("业务进程尚未退出")
         progress("services_stopped")
         run_python(
@@ -535,17 +534,18 @@ def release(
         )
         (APP / "release.json").chmod(420)
         update_env(url, spec["revision"])
-        for unit in UNITS:
-            source = APP / "deploy" / (unit + ".service")
-            if source.exists():
-                shutil.copyfile(source, pathlib.Path("/etc/systemd/system") / (unit + ".service"))
+        for source in (APP / "deploy").glob("qingda-*"):
+            if source.suffix in {".service", ".timer"}:
+                target = pathlib.Path("/etc/systemd/system") / unit(source.name.removeprefix("qingda-"))
+                target.write_text(service_template(source))
+                target.chmod(0o644)
         command(["systemctl", "daemon-reload"])
         switched = False
-        command(["systemctl", "start", "wechat-manager-web"])
+        command(["systemctl", "start", unit("web")])
         wait_health(health_url(), spec["revision"], target_schema)
         if buffered:
             gateway.put(before)
-            command(["systemctl", "stop", "wechat-manager-migration-inbox"], timeout=40)
+            command(["systemctl", "stop", unit("migration-inbox")], timeout=40)
             run_python(
                 APP / ".venv/bin/python",
                 APP,
@@ -553,13 +553,10 @@ def release(
                 "from wechat_manager.store import Store;from wechat_manager.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);print(replay(s));assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.close()",
             )
             buffered = False
-        if not paused:
-            command(["systemctl", "start", "wechat-manager-worker"])
+        if run_worker:
+            command(["systemctl", "start", unit("worker")])
             wait_runtimes(url, spec["revision"])
-        elif (
-            command(["systemctl", "show", "wechat-manager-worker", "--property=MainPID", "--value"]).strip()
-            != b"0"
-        ):
+        elif command(["systemctl", "show", unit("worker"), "--property=MainPID", "--value"]).strip() != b"0":
             raise RuntimeError("停站期间Worker不得运行")
         wait_health(health_url(), spec["revision"], target_schema)
         if buffered is False and callback_enabled:
@@ -569,7 +566,7 @@ def release(
                 url,
                 "from wechat_manager.store import Store;s=Store(__import__('os').environ['DATABASE_URL']);assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.query('DELETE FROM migration_inbox WHERE imported=1 RETURNING id');s.close()",
             )
-            pathlib.Path("/etc/wechat-manager/migration-buffer.env").unlink(missing_ok=True)
+            (CONFIG / "migration-buffer.env").unlink(missing_ok=True)
         verify_api_auth(
             health_url().removesuffix("/internal/health")
             if paused
@@ -641,26 +638,28 @@ def release(
                     with tarfile.open(stage / "source.tar.gz") as archive:
                         archive.extractall(APP, filter="data")
                     restore_environment(stage / "files/.env")
-                    for unit in UNITS:
-                        shutil.copyfile(
-                            APP / "deploy" / (unit + ".service"),
-                            pathlib.Path("/etc/systemd/system") / (unit + ".service"),
-                        )
+                    for service in UNITS:
+                        source = APP / "deploy" / (service + ".service")
+                        if not source.exists():
+                            source = APP / "deploy" / ("qingda-" + service.split("-", 2)[-1] + ".service")
+                        target = pathlib.Path("/etc/systemd/system") / (service + ".service")
+                        target.write_text(service_template(source))
+                        target.chmod(0o644)
                     command(["systemctl", "daemon-reload"])
                 align_schema(APP / ".venv/bin/python", APP, pg_url("wechat_manager"), source_schema(APP))
                 if buffered:
-                    command(["systemctl", "start", "wechat-manager-web"])
+                    command(["systemctl", "start", unit("web")])
                     gateway.put(before)
-                    command(["systemctl", "stop", "wechat-manager-migration-inbox"], timeout=40)
+                    command(["systemctl", "stop", unit("migration-inbox")], timeout=40)
                     run_python(
                         APP / ".venv/bin/python",
                         APP,
                         url,
                         "from wechat_manager.store import Store;from wechat_manager.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
                     )
-                    pathlib.Path("/etc/wechat-manager/migration-buffer.env").unlink(missing_ok=True)
+                    (CONFIG / "migration-buffer.env").unlink(missing_ok=True)
                     buffered = False
-                command(["systemctl", "start", *(["wechat-manager-web"] if paused else rollback_units())])
+                command(["systemctl", "start", *([unit("web")] if not run_worker else rollback_units())])
                 progress("failed_before_switch_original_service_restored")
                 restored = True
             except BaseException:
@@ -712,6 +711,7 @@ def rollback_release(backup):
     register(stage, "transient", "rollback_preparing")
     with tarfile.open(backup / "source.tar.gz") as archive:
         old = json.load(archive.extractfile("release.json"))
+        check_rollback_layout(old["files"])
         spec = {
             **old,
             "expected_manifest_sha256": sha(APP / "release.json"),

@@ -321,6 +321,14 @@ def test_approval_and_resume_fail_closed(tmp_path, monkeypatch):
 
 
 def test_operations_readonly_sees_rows_hidden_without_user_context(tmp_path, monkeypatch):
+    # 运维子进程复用本次隔离解释器，不依赖尚未部署的生产目录。
+    import sys
+
+    class IsolatedApp:
+        def __truediv__(self, name):
+            return Path(sys.executable) if name == ".venv/bin/python" else tmp_path / name
+
+    monkeypatch.setattr(domain, "APP", IsolatedApp())
     http, store, config, sms, clock = setup(tmp_path)
     schema = store.query("SELECT current_schema() AS name")[0]["name"]
     with store.transaction() as c:

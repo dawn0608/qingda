@@ -1,0 +1,26 @@
+[Unit]
+Description=青答 Qingda Web 与持久回调
+After=network.target postgresql@17-main.service
+Requires=postgresql@17-main.service
+
+[Service]
+User=qingda
+Group=qingda
+WorkingDirectory=/opt/qingda
+Environment=PYTHONPATH=/opt/qingda/backend
+Environment=APP_ROOT=/opt/qingda
+Environment=OUTBOUND_PAUSE_FILE=/etc/qingda/outbound-paused
+EnvironmentFile=/opt/qingda/.env
+ExecStart=/opt/qingda/.venv/bin/python -m wechat_manager serve
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/qingda
+LimitNOFILE=2048
+
+[Install]
+WantedBy=multi-user.target

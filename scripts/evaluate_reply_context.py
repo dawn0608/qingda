@@ -298,7 +298,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--database", default=os.getenv("TEST_DATABASE_URL"), help="仅隔离评测库，默认从TEST_DATABASE_URL读取"
     )
-    parser.add_argument("--production-root", type=Path, default=Path("/opt/wechat-manager"))
+    parser.add_argument("--production-root", type=Path, default=Path("/opt/qingda"))
     parser.add_argument("--account-id", type=int, required=True)
     parser.add_argument("--user-id", type=int, required=True)
     parser.add_argument("--account-prompt-file", type=Path, help="只读候选账号设定")

@@ -24,6 +24,6 @@
 
 ## 备份与连接
 
-使用 `deploy/server.py backup` 生成 PostgreSQL custom-format 备份，实际恢复检查成功后才轮转。备份包含配置、主密钥、媒体及网关证书状态，放在 `/var/backups/wechat-manager` 并走统一保留入口。
+使用 `deploy/server.py backup` 生成 PostgreSQL custom-format 备份，实际恢复检查成功后才轮转。备份包含配置、主密钥、媒体及网关证书状态，放在 `/var/backups/qingda` 并走统一保留入口。
 
 管理工具通过已授权的 SSH 隧道连接服务器本机 PostgreSQL，使用对应管理角色。不得开放数据库公网端口。

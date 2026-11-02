@@ -7,12 +7,12 @@ import re
 import subprocess
 from pathlib import Path
 
+from layout import CERTBOT
 from nginx_routes import routes
 from proxy import ACME, Gateway
 from storage_retention import ROOT, storage_lock
 
 WEBROOT = ACME / "webroot"
-CERTBOT = Path("/opt/wechat-manager-acme/bin/certbot")
 LINEAGE = ACME / "certbot/live/codex-console"
 
 
@@ -23,7 +23,7 @@ def render_domain(domain, mode="active", test=False, lineage=None):
     if mode not in {"active", "paused", "challenge"}:
         raise ValueError("未知域名站点阶段")
     http, https = ("127.0.0.1:18080", "127.0.0.1:18443") if test else ("80", "443")
-    pid = "/run/wechat-domain-candidate.pid" if test else "/run/nginx.pid"
+    pid = "/run/qingda-domain-candidate.pid" if test else "/run/nginx.pid"
     certificate = lineage or ACME / "certbot/live" / domain.replace(".", "-")
     default_certificate = lineage or (certificate if (certificate / "fullchain.pem").exists() else LINEAGE)
     if not re.fullmatch(r"/[A-Za-z0-9_./-]+", str(certificate)):
@@ -43,7 +43,7 @@ def render_domain(domain, mode="active", test=False, lineage=None):
     {body}
   }}"""
     redirect = f"return 308 https://{domain}$request_uri;" if mode == "active" else "return 503;"
-    return f"""# wechat-manager managed domain gateway: {mode}
+    return f"""# Qingda managed domain gateway: {mode}
 user www-data;
 worker_processes 2;
 pid {pid};
@@ -56,7 +56,7 @@ http {{
   keepalive_timeout 65;
   server_tokens off;
   access_log off;
-  log_format wechat_manager_safe '$msec $server_port $request_method $status $body_bytes_sent';
+  log_format qingda_safe '$msec $server_port $request_method $status $body_bytes_sent';
   server {{ listen {http} default_server; server_name _;
     location ^~ /.well-known/acme-challenge/ {{ root {WEBROOT}; }}
     location / {{ return 444; }}

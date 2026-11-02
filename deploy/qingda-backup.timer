@@ -1,5 +1,5 @@
 [Unit]
-Description=Daily Wechat management backup
+Description=青答 Qingda 每日备份
 
 [Timer]
 OnCalendar=*-*-* 03:30:00 Asia/Shanghai

@@ -1,6 +1,6 @@
 # 备份与存储保留
 
-发布、日备和手工维护共用 `deploy/storage_retention.py`，根目录固定为 `/var/backups/wechat-manager`，互斥锁为 `/run/lock/wechat-manager-release.lock`。不另建长期堆积目录，不抢占其他正在运行的发布或备份。
+发布、日备和手工维护共用 `deploy/storage_retention.py`，根目录固定为 `/var/backups/qingda`，互斥锁为 `/run/lock/qingda-release.lock`。不另建长期堆积目录，不抢占其他正在运行的发布或备份。
 
 日备使用 PostgreSQL custom-format，包含配置、主密钥、媒体和原生网关证书状态；新日备实际恢复校验成功后轮转，保留最近 7 份。发布复用可恢复源码清单和依赖环境，不重复全量复制业务数据；配置和结构变更额外备份。
 
@@ -11,3 +11,5 @@
 回收前核实项目路径、元数据、哈希、挂载点及进程引用。失效中转超过 24 小时复查，明确无依赖才回收；未分类目录保持保留。源码目录不存放备份、演练库、测试缓存或上传中转。
 
 `BACKUP_RELEASE_KEEP` 默认 0，`BACKUP_DAILY_KEEP` 默认 7，`BACKUP_TRANSIENT_TTL_HOURS` 默认 24。释放保护须依据对应任务的实际验收，不能用较新的无关发布覆盖旧任务的未验收状态。
+
+运维改名时只迁移备份父目录，内部原始文件、校验值、保护状态及历史名称保持不变。迁移恢复映射见[运维文档](operations.md)；迁移前配置、原环境和原始发布备份登记保护，不因本次新版本验收自动删除。临时中转及隔离测试材料核验无引用后按已有入口回收。

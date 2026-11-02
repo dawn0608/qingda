@@ -70,9 +70,9 @@ GitHub CI 的绿色状态仅表示上述检查通过。完整后端回归仍使�
 
 ## 部署与维护
 
-既有运维脚本沿用 `/opt/wechat-manager`、`wechat_manager` 数据库角色及 `wechat-manager-*` 服务名称，GitHub 仓库改名不改变这些运行接口。部署前按自己的环境配置路径、域名、证书及供应商服务，示例地址不代表公共演示站点。
+线上运维统一使用 `/opt/qingda`、`qingda-*` 服务及 `qingda` 系统账号；Python 模块、软件包、`wechat_manager` 数据库与角色名保持兼容。部署前按自己的环境配置路径、域名、证书及供应商服务，示例地址不代表公共演示站点。
 
-提交或推送不自动部署。生产操作须有明确授权，沿用构建、备份、发布及保留入口，部署后分别核对 API、Worker 和前端的版本与哈希。配置及操作见[部署与恢复](docs/operations.md)、[域名与 HTTPS](docs/domain-https.md)和[备份保留](docs/storage-retention.md)。
+本项目已确认任务默认连续完成必要检查、提交推送、CI 检查、既有生产环境部署及真实数据验收；同一范围无需重复确认部署。此约定由任务执行者落实，不表示 GitHub 已配置自动发布任务。部署后分别核对 API、Worker 和前端版本与哈希，业务验收默认只读，需要测试微信消息时由用户触发。配置及操作见[部署与恢复](docs/operations.md)、[域名与 HTTPS](docs/domain-https.md)和[备份保留](docs/storage-retention.md)。
 
 ## 文档
 

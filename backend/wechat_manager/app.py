@@ -81,9 +81,7 @@ def create_app(config=None, gateway_factory=None, sms_provider=None, auth_clock=
         await gateway.close()
         store.close()
 
-    app = FastAPI(
-        title="WechatApi 管理台", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
-    )
+    app = FastAPI(title="青答 Qingda", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.manager, app.state.gateway, app.state.config = manager, gateway, config
 
     @app.exception_handler(RequestValidationError)

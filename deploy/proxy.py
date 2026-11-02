@@ -6,9 +6,7 @@ import tarfile
 from pathlib import Path
 
 from dotenv import dotenv_values
-
-APP = Path("/opt/wechat-manager")
-ACME = Path("/var/lib/wechat-manager-acme")
+from layout import ACME, APP, CONFIG, unit
 
 
 def settings():
@@ -65,15 +63,17 @@ def backup_state(target):
     paths = [
         Path("/etc/nginx"),
         ACME,
-        Path("/etc/wechat-manager/outbound-paused"),
-        Path("/etc/wechat-manager/domain-switch.json"),
+        (CONFIG / "outbound-paused"),
+        (CONFIG / "domain-switch.json"),
     ]
     for name in (
-        "wechat-manager-worker.service",
-        "wechat-manager-worker.service.d",
-        "wechat-manager-web.service",
-        "wechat-manager-certificate-renew.service",
-        "wechat-manager-certificate-renew.timer",
+        unit("worker.service"),
+        unit("worker.service.d"),
+        unit("web.service"),
+        unit("backup.service"),
+        unit("backup.timer"),
+        unit("certificate-renew.service"),
+        unit("certificate-renew.timer"),
     ):
         paths.append(Path("/etc/systemd/system") / name)
     with tarfile.open(target, "w:gz") as archive:

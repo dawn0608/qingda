@@ -15,7 +15,7 @@ PIP_VERSION = "25.3"
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=ROOT / "temp/wechat-manager-release.tar.gz")
+    parser.add_argument("--output", type=Path, default=ROOT / "temp/qingda-release.tar.gz")
     parser.add_argument("--baseline", type=Path, help="增量发布的已核实线上源码快照")
     parser.add_argument("--nginx-sha256", help="已核实的线上网关哈希")
     args = parser.parse_args()
