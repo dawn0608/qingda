@@ -4,14 +4,14 @@ import asyncio
 import json
 
 import pytest
+from qingda import reply_decisions
+from qingda.providers import ProviderError
+from qingda.tool_generation import Checkpoint, generate
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_group_wakeup import GROUP, group_setup, text
 from test_reply_tools import Model, call, response
 from test_worker import Gateway
-from wechat_manager import reply_decisions
-from wechat_manager.providers import ProviderError
-from wechat_manager.tool_generation import Checkpoint, generate
-from wechat_manager.worker import Worker
 
 
 def decision(action="reply", content="已了解", reason="answer", close=False, ids=None):
@@ -188,7 +188,7 @@ def test_group_collection_is_member_scoped_and_capped(tmp_path):
     rounds = s.query("SELECT * FROM group_reply_rounds ORDER BY first_at")
     assert len(rounds) == 2 and rounds[0]["collect_until"] == NOW + 12
     with s.connect() as c:
-        from wechat_manager.reply_queue import members
+        from qingda.reply_queue import members
 
         batch = members(c, s.query("SELECT * FROM tasks WHERE id=%s", (rounds[0]["task_id"],))[0])
     assert len(batch) == 4
@@ -293,7 +293,7 @@ async def test_truncated_decision_is_retried_with_more_capacity():
 
 
 async def test_reference_isolation_and_revocation_cancel_queued_reply(tmp_path):
-    from wechat_manager.reply_references import assistant_reply
+    from qingda.reply_references import assistant_reply
 
     s, m, a, group = group_setup(tmp_path)
     text(s, m)
@@ -347,8 +347,8 @@ async def test_reference_isolation_and_revocation_cancel_queued_reply(tmp_path):
 
 
 async def test_group_image_collection_survives_restart_and_sending_never_replays(tmp_path):
-    from wechat_manager.service import Manager
-    from wechat_manager.store import Store
+    from qingda.service import Manager
+    from qingda.store import Store
 
     s, m, _, _ = group_setup(tmp_path)
     deliver(

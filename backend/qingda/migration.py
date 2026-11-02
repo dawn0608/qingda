@@ -19,9 +19,9 @@ def migrate_database(url):
         with conn.transaction():
             conn.execute("SELECT pg_advisory_xact_lock(17950,2)")
             if conn.execute(
-                "SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner WHERE n.nspname=current_schema() AND (r.rolname='wechat_manager_owner' OR (r.rolname='pg_database_owner' AND (SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname=current_database())='wechat_manager_owner')) AND pg_has_role(current_user,'wechat_manager_owner','USAGE')"
+                "SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid=n.nspowner WHERE n.nspname=current_schema() AND (r.rolname='qingda_owner' OR (r.rolname='pg_database_owner' AND (SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname=current_database())='qingda_owner')) AND pg_has_role(current_user,'qingda_owner','USAGE')"
             ).fetchone():
-                conn.execute("SET LOCAL ROLE wechat_manager_owner")
+                conn.execute("SET LOCAL ROLE qingda_owner")
             if not conn.execute("SELECT to_regclass('schema_versions')").fetchone()[0]:
                 conn.execute(SQL.read_text(encoding="utf-8"))
             current = conn.execute("SELECT max(version) FROM schema_versions").fetchone()[0]

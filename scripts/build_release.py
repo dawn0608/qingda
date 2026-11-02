@@ -55,14 +55,12 @@ def main():
     pip_file.write_bytes(wheel)
     tracked = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines()
     files = {name: ROOT / name for name in tracked}
-    compile_catalog = runpy.run_path(str(ROOT / "backend/wechat_manager/emotion_catalog.py"))[
-        "compile_catalog"
-    ]
+    compile_catalog = runpy.run_path(str(ROOT / "backend/qingda/emotion_catalog.py"))["compile_catalog"]
     catalog = staging / "native_emotions.json"
     catalog.write_text(
         json.dumps(compile_catalog(ROOT), ensure_ascii=False, sort_keys=True), encoding="utf-8"
     )
-    files["backend/wechat_manager/native_emotions.json"] = catalog
+    files["backend/qingda/native_emotions.json"] = catalog
     for path in (ROOT / "frontend/dist").rglob("*"):
         if path.is_file():
             files[path.relative_to(ROOT).as_posix()] = path
@@ -71,7 +69,12 @@ def main():
     files.update({"deploy/requirements.txt": requirements, "deploy/pip.whl": pip_file})
     revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in files.items()}
-    release = {"revision": revision, "files": hashes, "tracked": {name: hashes[name] for name in tracked}}
+    release = {
+        "project_identity": "qingda",
+        "revision": revision,
+        "files": hashes,
+        "tracked": {name: hashes[name] for name in tracked},
+    }
     if args.baseline:
         import base64
 

@@ -12,7 +12,7 @@ from .providers import ProviderError
 
 @lru_cache(maxsize=1)
 def emotions():
-    runtime = ROOT / "backend/wechat_manager/native_emotions.json"
+    runtime = ROOT / "backend/qingda/native_emotions.json"
     if runtime.is_file():
         mapping = json.loads(runtime.read_text(encoding="utf-8"))
         if (

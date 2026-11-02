@@ -160,8 +160,8 @@ def test_resume_api_requires_auth_csrf_and_returns_current_status(tmp_path):
 
 
 async def test_resume_during_generation_invalidates_old_result(tmp_path):
+    from qingda.worker import Worker
     from test_worker import Gateway
-    from wechat_manager.worker import Worker
 
     store, manager, account, conv = setup(tmp_path)
     deliver(store, manager, 1)

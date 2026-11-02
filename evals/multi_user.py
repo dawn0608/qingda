@@ -10,16 +10,16 @@ from urllib.parse import urlsplit
 
 import httpx
 from PIL import Image
-from wechat_manager.app import create_app
-from wechat_manager.auth import COOKIE
-from wechat_manager.config import Config
-from wechat_manager.database_async import database_call
-from wechat_manager.providers import Gateway, ProviderError
-from wechat_manager.security import digest
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
-from wechat_manager.worker import Worker
+from qingda.app import create_app
+from qingda.auth import COOKIE
+from qingda.config import Config
+from qingda.database_async import database_call
+from qingda.providers import Gateway, ProviderError
+from qingda.security import digest
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
+from qingda.worker import Worker
 
 checks = []
 
@@ -76,7 +76,7 @@ def process_claim(url, cid, queue):
 
 def process_lease(url, uid, now, queue, crash=False):
     store = Store(url)
-    from wechat_manager.security import Vault
+    from qingda.security import Vault
 
     manager = Manager(store, Vault(Config.from_env().key_file))
     worker = Worker(manager, FakeGateway(manager), clock=lambda: now)
@@ -124,7 +124,7 @@ def process_tests(store, uid):
 
 async def main():
     database = urlsplit(os.environ["DATABASE_URL"]).path
-    if "multiuser" not in database or database == "/wechat_manager":
+    if "multiuser" not in database or database == "/qingda":
         raise ValueError("必须使用multiuser隔离数据库")
     config = Config.from_env()
     config.smtp_host = "smtp.test.invalid"

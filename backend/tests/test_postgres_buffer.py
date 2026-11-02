@@ -14,12 +14,12 @@ from contextlib import ExitStack
 import httpx
 import pytest
 from psycopg_pool import PoolTimeout, TooManyRequests
+from qingda.callback_buffer import replay
+from qingda.database_async import database_call
+from qingda.security import digest
+from qingda.store import Store
 from test_database import database_url
 from test_inbox import event
-from wechat_manager.callback_buffer import replay
-from wechat_manager.database_async import database_call
-from wechat_manager.security import digest
-from wechat_manager.store import Store
 
 
 def test_callback_buffer_commits_before_ack_and_replay_is_deduplicated(tmp_path, unused_tcp_port):
@@ -33,7 +33,7 @@ def test_callback_buffer_commits_before_ack_and_replay_is_deduplicated(tmp_path,
         "WEB_BIND_HOST": "127.0.0.1",
     }
     process = subprocess.Popen(
-        [sys.executable, "-m", "wechat_manager.callback_buffer", "--port", str(unused_tcp_port)],
+        [sys.executable, "-m", "qingda.callback_buffer", "--port", str(unused_tcp_port)],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -46,7 +46,7 @@ def test_callback_buffer_commits_before_ack_and_replay_is_deduplicated(tmp_path,
             while True:
                 try:
                     response = client.get(url)
-                    assert response.headers["X-Callback-Receiver"] == "wechat-manager-postgres-buffer"
+                    assert response.headers["X-Callback-Receiver"] == "qingda-postgres-buffer"
                     break
                 except httpx.RequestError:
                     if time.monotonic() > deadline:

@@ -1,9 +1,9 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from qingda.service import Manager
+from qingda.store import Store
 from test_database import database_url
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
 
 
 def event(msg="8895067626106766584", **data):
@@ -26,7 +26,7 @@ def event(msg="8895067626106766584", **data):
 def test_concurrent_redelivery_is_one_durable_event_with_original_hash_and_single_content(tmp_path):
     store = Store(database_url(tmp_path / "test.db"))
     raw = json.dumps(event(), ensure_ascii=False).encode()
-    from wechat_manager.tenancy import user_scope
+    from qingda.tenancy import user_scope
 
     def receive(_):
         with user_scope(1):

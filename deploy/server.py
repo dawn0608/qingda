@@ -20,9 +20,9 @@ from storage_retention import configured, register, sha, storage_lock
 
 def backup():
     sys.path.insert(0, str(APP / "backend"))
+    from qingda.migration import backup_database, restore_database
+    from qingda.store import Store
     from update import pg_url
-    from wechat_manager.migration import backup_database, restore_database
-    from wechat_manager.store import Store
 
     values = dotenv_values(APP / ".env")
     url = values["DATABASE_URL"]
@@ -30,7 +30,7 @@ def backup():
         folder = ROOT / ("daily-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()))
         folder.mkdir(mode=0o700)
         register(folder, "daily", "preparing")
-        backup_database(url, folder / "manager.dump")
+        backup_database(url, folder / "qingda.dump")
         for key, default, name in [
             ("MASTER_KEY_FILE", str(CONFIG / "master.key"), "master.key"),
         ]:
@@ -42,19 +42,19 @@ def backup():
                 if (data / name).exists():
                     archive.add(data / name, arcname=name)
         backup_state(folder / "proxy-state.tar.gz")
-        database = "wechat_manager_backup_check_" + str(os.getpid())
+        database = "qingda_backup_check_" + str(os.getpid())
         subprocess.run(
-            ["runuser", "-u", "postgres", "--", "createdb", "-O", "wechat_manager_migration", database],
+            ["runuser", "-u", "postgres", "--", "createdb", "-O", "qingda_migration", database],
             check=True,
             capture_output=True,
         )
         try:
-            restore_database(pg_url(database), folder / "manager.dump")
+            restore_database(pg_url(database), folder / "qingda.dump")
             store = Store(pg_url(database))
             assert store.health()["database_ready"]
             store.close()
         finally:
-            if not database.startswith("wechat_manager_backup_check_"):
+            if not database.startswith("qingda_backup_check_"):
                 raise ValueError("恢复演练库名称非法")
             subprocess.run(
                 ["runuser", "-u", "postgres", "--", "dropdb", database], check=True, capture_output=True

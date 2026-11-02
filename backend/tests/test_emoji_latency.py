@@ -2,9 +2,9 @@
 
 import httpx
 import pytest
+from qingda.providers import Gateway, ProviderError
 from test_automation import setup
 from test_emoji_policy import image_bytes
-from wechat_manager.providers import Gateway, ProviderError
 
 
 @pytest.mark.parametrize("digest", [None, "a" * 32])

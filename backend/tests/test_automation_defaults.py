@@ -1,9 +1,9 @@
 """停用主动问候后，默认自动回复及人工选择仍持久有效。"""
 
 from automation_fixtures import active, verified
-from wechat_manager import automation_defaults
-from wechat_manager.contact_changes import mark_removed, record_evidence
-from wechat_manager.store import Store
+from qingda import automation_defaults
+from qingda.contact_changes import mark_removed, record_evidence
+from qingda.store import Store
 
 
 async def test_default_reply_preserves_manual_off_prompt_and_pause_across_sync_and_restart(tmp_path):

@@ -12,16 +12,16 @@ import httpx
 import psycopg.sql
 import pytest
 from auth_fixtures import login_response
+from qingda.providers import Gateway
+from qingda.reply_tools import ReplyTools
+from qingda.security import Vault, create_key
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
+from qingda.weather_settings import credentials, save
 from test_automation import deliver, setup
 from test_database import database_url
 from test_http import client
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_tools import ReplyTools
-from wechat_manager.security import Vault, create_key
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
-from wechat_manager.weather_settings import credentials, save
 
 
 def test_weather_api_atomic_encrypted_and_blank_key_preserved(tmp_path):

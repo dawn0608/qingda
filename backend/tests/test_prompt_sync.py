@@ -1,6 +1,6 @@
 import pytest
+from qingda import prompt_drafts, prompt_sync
 from test_automation import setup
-from wechat_manager import prompt_drafts, prompt_sync
 
 
 @pytest.mark.parametrize("dirty", [False, True])

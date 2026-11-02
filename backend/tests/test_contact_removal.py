@@ -2,7 +2,7 @@ import json
 
 import pytest
 from contact_fixtures import setup_directory
-from wechat_manager.worker import Worker
+from qingda.worker import Worker
 
 
 def delete_event(store, manager, peer, **changes):

@@ -1,5 +1,5 @@
-from wechat_manager.protocol import normalize, redact
-from wechat_manager.store import message_identity
+from qingda.protocol import normalize, redact
+from qingda.store import message_identity
 
 
 def test_wrapped_identifiers_and_xml_credentials_are_redacted():

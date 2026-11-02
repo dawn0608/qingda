@@ -13,14 +13,14 @@ from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 from evaluate_reply_batches import MARKDOWN, ReadSettings
+from qingda.config import ROOT, Config
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.reply_prompt import load
+from qingda.security import Vault
+from qingda.tenancy import current_user, user_scope
 from reply_evaluation import account_prompt as read_account_prompt
 from reply_evaluation import prompt_metrics
-from wechat_manager.config import ROOT, Config
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_prompt import load
-from wechat_manager.security import Vault
-from wechat_manager.tenancy import current_user, user_scope
 
 
 def published_on(value, date, zone="Asia/Shanghai"):
@@ -136,7 +136,7 @@ async def evaluate(account_id, output, case_file, account_prompt_file=None):
                 }
             item["duration_ms"] = int((time.monotonic() - started) * 1000)
             results.append(item)
-            from wechat_manager.reply_decisions import TOOL
+            from qingda.reply_decisions import TOOL
 
             receipt = {
                 "user_id": current_user.get(),

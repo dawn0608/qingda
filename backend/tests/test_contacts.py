@@ -3,10 +3,10 @@ import json
 
 import pytest
 from auth_fixtures import login_response
+from qingda.contacts import contact_counts
+from qingda.providers import ProviderError
+from qingda.worker import Worker
 from test_account_refresh import NOW, account_service
-from wechat_manager.contacts import contact_counts
-from wechat_manager.providers import ProviderError
-from wechat_manager.worker import Worker
 
 
 def test_counts_exclude_system_self_public_and_groups_without_requiring_wxid_prefix():
@@ -119,7 +119,7 @@ async def test_full_pull_timeout_reads_cache_without_repeating_full_pull(tmp_pat
 
 
 async def test_first_failure_and_total_timeout_keep_counts_unknown(tmp_path, monkeypatch):
-    import wechat_manager.contacts as contacts
+    import qingda.contacts as contacts
 
     monkeypatch.setattr(contacts, "TASK_TIMEOUT", 0.02)
     _, manager, service, gateway, aid, clock = account_service(tmp_path)
@@ -257,7 +257,7 @@ def test_accounts_mobile_requires_login_and_never_enters_audit(tmp_path):
     response = c.get("/wechat/api/v1/accounts")
     assert response.status_code == 401 and response.headers["Cache-Control"] == "no-store"
     login_response(c)
-    from wechat_manager.service import Manager
+    from qingda.service import Manager
 
     manager = Manager(store)
     account = manager.add_account("mobile-test")

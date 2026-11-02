@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from qingda import context_budget, context_snapshot
+from qingda.history_tool import HistoryReader
+from qingda.providers import ProviderError
+from qingda.reply_queue import fit_context
 from test_automation import NOW, deliver, setup
 from test_group_wakeup import GROUP, group_setup, text
-from wechat_manager import context_budget, context_snapshot
-from wechat_manager.history_tool import HistoryReader
-from wechat_manager.providers import ProviderError
-from wechat_manager.reply_queue import fit_context
 
 
 def accept(store, mid, answer, at):
@@ -111,7 +111,7 @@ def test_group_member_history_survives_500_bystander_messages(tmp_path):
 def test_search_voice_and_keyword_intersection_prefers_latest_correction(tmp_path):
     from types import SimpleNamespace
 
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     manager.media = IncomingMedia(manager, SimpleNamespace(data_dir=tmp_path), transcriber=object())
@@ -321,7 +321,7 @@ def test_two_process_recall_crash_restore_and_ownership(tmp_path):
         "ACTOR_DATABASE_URL": store.url,
         "ACTOR_TASK_ID": task["id"],
         "ACTOR_OWNER": task["_owner"],
-        "PGAPPNAME": "wechat-manager-context-actor",
+        "PGAPPNAME": "qingda-context-actor",
     }
     first = subprocess.Popen(
         [sys.executable, str(actor), "hold"],
@@ -371,7 +371,7 @@ def test_two_process_recall_crash_restore_and_ownership(tmp_path):
         assert canceled.returncode != 0 and "task_canceled" in canceled.stderr
         assert (
             store.query(
-                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='wechat-manager-context-actor'"
+                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='qingda-context-actor'"
             )[0]["n"]
             == 0
         )
@@ -393,7 +393,7 @@ def test_two_process_snapshot_checks_with_saturated_media_pool(tmp_path):
         "ACTOR_TASK_ID": task["id"],
         "ACTOR_OWNER": task["_owner"],
         "ACTOR_MEDIA_ROOT": str(tmp_path),
-        "PGAPPNAME": "wechat-manager-context-pool-actor",
+        "PGAPPNAME": "qingda-context-pool-actor",
     }
     actors = [
         subprocess.Popen(
@@ -418,7 +418,7 @@ def test_two_process_snapshot_checks_with_saturated_media_pool(tmp_path):
             assert json.loads(stdout)["ok"]
         assert (
             store.query(
-                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='wechat-manager-context-pool-actor'"
+                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='qingda-context-pool-actor'"
             )[0]["n"]
             == 0
         )
@@ -430,9 +430,9 @@ def test_two_process_snapshot_checks_with_saturated_media_pool(tmp_path):
 
 
 async def test_history_hidden_after_generation_is_checked_at_send_boundary(tmp_path):
+    from qingda.callbacks import message_key, put
+    from qingda.worker import Worker
     from test_worker import Gateway
-    from wechat_manager.callbacks import message_key, put
-    from wechat_manager.worker import Worker
 
     store, manager, _, conv = setup(tmp_path)
     seed(store, manager, 2)

@@ -8,9 +8,9 @@ import sys
 import wave
 
 from contact_fixtures import setup_directory
+from qingda.media_decode import playback_slot, run_process
 from test_authentication import code_login
 from test_chat_records import endpoint, incoming
-from wechat_manager.media_decode import playback_slot, run_process
 
 
 def test_cached_voice_playback_independent_of_asr_and_scoped(tmp_path):
@@ -73,7 +73,7 @@ def test_cached_voice_playback_independent_of_asr_and_scoped(tmp_path):
 
 
 def test_playback_capacity_shared_across_processes_and_recovers_on_crash(tmp_path):
-    code = "from pathlib import Path; from wechat_manager.media_decode import playback_slot; import sys\nwith playback_slot(Path(sys.argv[1])):\n print('held',flush=True)\n input()\n"
+    code = "from pathlib import Path; from qingda.media_decode import playback_slot; import sys\nwith playback_slot(Path(sys.argv[1])):\n print('held',flush=True)\n input()\n"
     children = []
     try:
         for _ in range(2):
@@ -109,7 +109,7 @@ def test_playback_capacity_shared_across_processes_and_recovers_on_crash(tmp_pat
 
 def test_cancelled_playback_kills_decoder_and_releases_slot(tmp_path):
     ready = tmp_path / "held"
-    code = "from pathlib import Path; from wechat_manager.media_decode import playback_slot; import time,sys\nwith playback_slot(Path(sys.argv[1])):\n Path(sys.argv[2]).touch()\n time.sleep(60)\n"
+    code = "from pathlib import Path; from qingda.media_decode import playback_slot; import time,sys\nwith playback_slot(Path(sys.argv[1])):\n Path(sys.argv[2]).touch()\n time.sleep(60)\n"
 
     async def check():
         task = asyncio.create_task(run_process(sys.executable, "-c", code, tmp_path, ready))

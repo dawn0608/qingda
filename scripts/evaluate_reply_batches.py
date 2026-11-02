@@ -12,13 +12,13 @@ from types import SimpleNamespace
 
 import psycopg
 from PIL import Image, ImageDraw
+from qingda.config import ROOT, Config
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.reply_prompt import load
+from qingda.security import Vault
+from qingda.tenancy import current_user, user_scope
 from reply_evaluation import account_prompt, prompt_metrics
-from wechat_manager.config import ROOT, Config
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_prompt import load
-from wechat_manager.security import Vault
-from wechat_manager.tenancy import current_user, user_scope
 
 
 class ReadSettings:
@@ -126,7 +126,7 @@ async def evaluate(
             if baseline_root:
                 template, prompt = load(selected_prompt, kind, baseline_root / "prompts/auto_reply.md")
             templates[kind] = hashlib.sha256(template.encode()).hexdigest()
-            from wechat_manager.reply_decisions import TOOL
+            from qingda.reply_decisions import TOOL
 
             metrics[kind] = prompt_metrics(prompt, TOOL)
             case_history = (
@@ -317,12 +317,12 @@ async def evaluate(
         },
         "source_sha256": {
             str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-            for folder, pattern in (("backend/wechat_manager", "*.py"), ("prompts", "*.md"))
+            for folder, pattern in (("backend/qingda", "*.py"), ("prompts", "*.md"))
             for path in (ROOT / folder).glob(pattern)
         },
         "reply_policy": "baseline"
         if baseline_root
-        else __import__("wechat_manager.reply_decisions", fromlist=["VERSION"]).VERSION,
+        else __import__("qingda.reply_decisions", fromlist=["VERSION"]).VERSION,
         "repetitions": repeat,
         "prompt_sha256": templates,
         "prompt_metrics": metrics,

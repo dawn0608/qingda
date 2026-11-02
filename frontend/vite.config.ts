@@ -17,7 +17,7 @@ export default defineConfig({
         const aliases = JSON.parse(
           readFileSync(
             new URL(
-              "../backend/wechat_manager/native_emotions.json",
+              "../backend/qingda/native_emotions.json",
               import.meta.url,
             ),
             "utf8",

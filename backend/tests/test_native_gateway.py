@@ -32,8 +32,8 @@ def test_gateway_validates_and_reloads_nginx(tmp_path, monkeypatch):
 
 def test_zero_release_retention_preserves_unaccepted_and_failed(tmp_path):
     for name, state in [
-        ("chat-release-20260101-000001", "awaiting_acceptance"),
-        ("chat-release-20260101-000002", "needs_repair"),
+        ("qingda-release-20260101-000001", "awaiting_acceptance"),
+        ("qingda-release-20260101-000002", "needs_repair"),
     ]:
         folder = tmp_path / name
         folder.mkdir()
@@ -42,7 +42,7 @@ def test_zero_release_retention_preserves_unaccepted_and_failed(tmp_path):
         (folder / "retention.json").write_text(json.dumps({"kind": "release", "state": state}))
     policy = retention.Retention(root=tmp_path, scan_processes=False, release_keep=0)
     assert policy.plan()["delete"] == []
-    (tmp_path / "chat-release-20260101-000001/retention.json").write_text(
+    (tmp_path / "qingda-release-20260101-000001/retention.json").write_text(
         '{"kind":"release","state":"completed"}'
     )
     assert len(policy.plan()["delete"]) == 1
@@ -85,7 +85,7 @@ def test_independent_process_lock_crash_releases_owner(tmp_path):
 
 
 def test_release_waits_for_new_nginx_worker_before_stopping_app(monkeypatch):
-    responses = [None, "wechat-manager-postgres-buffer"]
+    responses = [None, "qingda-postgres-buffer"]
 
     class Response:
         status = 200

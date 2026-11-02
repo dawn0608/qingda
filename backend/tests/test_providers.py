@@ -2,10 +2,10 @@ import json
 
 import httpx
 import pytest
+from qingda.accounts import AccountService
+from qingda.providers import Gateway, ProviderError
+from qingda.security import Vault, create_key
 from test_automation import setup
-from wechat_manager.accounts import AccountService
-from wechat_manager.providers import Gateway, ProviderError
-from wechat_manager.security import Vault, create_key
 
 
 async def test_wechat_https_path_and_deepseek_nonthinking_contract(tmp_path):

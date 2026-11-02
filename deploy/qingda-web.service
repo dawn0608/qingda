@@ -11,7 +11,7 @@ Environment=PYTHONPATH=/opt/qingda/backend
 Environment=APP_ROOT=/opt/qingda
 Environment=OUTBOUND_PAUSE_FILE=/etc/qingda/outbound-paused
 EnvironmentFile=/opt/qingda/.env
-ExecStart=/opt/qingda/.venv/bin/python -m wechat_manager serve
+ExecStart=/opt/qingda/.venv/bin/python -m qingda serve
 Restart=on-failure
 RestartSec=3
 UMask=0077

@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 from business_fixtures import allow_reply, phone_takeover
+from qingda.providers import Gateway as RealGateway
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup, verified_fixture
 from test_worker import Gateway
-from wechat_manager.providers import Gateway as RealGateway
-from wechat_manager.worker import Worker
 
 
 async def test_account_allows_generation_across_conversations_but_serializes_sends(tmp_path):
@@ -433,7 +433,7 @@ async def test_capacity_splits_current_messages_without_dropping_or_merging_late
     tmp_path, monkeypatch
 ):
     # 人为缩小字节预算验证拆批，生产预算已独立扩容。
-    monkeypatch.setattr("wechat_manager.reply_queue.TEXT_LIMIT", 100000)
+    monkeypatch.setattr("qingda.reply_queue.TEXT_LIMIT", 100000)
     store, manager, _, _ = setup(tmp_path)
     deliver(store, manager, 1, Content={"string": "a" * 60000})
     deliver(store, manager, 2, Content={"string": "b" * 60000})

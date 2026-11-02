@@ -3,7 +3,7 @@ import io
 import pytest
 from fastapi import HTTPException
 from PIL import Image
-from wechat_manager.profile import avatar_image
+from qingda.profile import avatar_image
 
 
 def encoded(image, format="PNG", **options):

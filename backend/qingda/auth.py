@@ -20,7 +20,7 @@ from .sms import AliyunSms, SmsUnavailable
 from .tenancy import current_user, initialize_user
 
 PREFIX = "/wechat/api/v1/auth"
-COOKIE = "wechat_manager_session"
+COOKIE = "qingda_session"
 FAILURE = "邮箱、手机号或凭据不正确，请检查后重试"
 
 

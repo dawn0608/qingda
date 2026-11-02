@@ -3,9 +3,9 @@ import json
 
 import pytest
 from business_fixtures import allow_reply
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_worker import Gateway
-from wechat_manager.worker import Worker
 
 
 async def test_private_image_waits_for_followup_without_claiming_worker_slot(tmp_path):
@@ -124,7 +124,7 @@ async def test_missing_media_keeps_text_and_marks_failure_in_model_input(tmp_pat
             return True
 
         async def prepare(self, *args):
-            from wechat_manager.providers import ProviderError
+            from qingda.providers import ProviderError
 
             raise ProviderError("platform_download_rejected")
 
@@ -215,7 +215,7 @@ async def test_history_retains_more_than_ten_complete_rounds_with_real_send_time
 
 
 async def test_history_budget_removes_whole_old_round_but_not_current_input(tmp_path, monkeypatch):
-    monkeypatch.setattr("wechat_manager.context_budget.PRIVATE", (100, 400, 1000))
+    monkeypatch.setattr("qingda.context_budget.PRIVATE", (100, 400, 1000))
     store, manager, _, _ = setup(tmp_path)
     deliver(store, manager, 1, Content={"string": "甲" * 12001})
     worker = Worker(manager, Gateway(), clock=lambda: NOW + 5)
@@ -325,9 +325,9 @@ async def test_arrival_after_dispatch_boundary_is_a_new_round(tmp_path):
 
 
 def test_released_emotions_load_backend_resource_without_frontend_source(tmp_path, monkeypatch):
-    from wechat_manager import private_context
+    from qingda import private_context
 
-    runtime = tmp_path / "backend/wechat_manager/native_emotions.json"
+    runtime = tmp_path / "backend/qingda/native_emotions.json"
     runtime.parent.mkdir(parents=True)
     runtime.write_text(json.dumps({"[Strong]": "[强]"}), encoding="utf-8")
     (tmp_path / "release.json").write_text("{}")
@@ -340,8 +340,8 @@ def test_released_emotions_load_backend_resource_without_frontend_source(tmp_pat
 
 
 def test_released_emotions_require_packaged_resource(tmp_path, monkeypatch):
-    from wechat_manager import private_context
-    from wechat_manager.providers import ProviderError
+    from qingda import private_context
+    from qingda.providers import ProviderError
 
     (tmp_path / "release.json").write_text("{}")
     monkeypatch.setattr(private_context, "ROOT", tmp_path)

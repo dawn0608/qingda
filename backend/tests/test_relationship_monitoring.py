@@ -5,8 +5,8 @@ import json
 
 from business_fixtures import allow_reply, queue_contact_check
 from contact_fixtures import setup_directory
-from wechat_manager.accounts import AccountService
-from wechat_manager.worker import Worker
+from qingda.accounts import AccountService
+from qingda.worker import Worker
 
 
 async def test_background_monitor_detects_unsaved_group_without_page_or_callback(tmp_path):

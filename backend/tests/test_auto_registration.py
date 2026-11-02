@@ -7,9 +7,9 @@ import re
 
 import pytest
 from fastapi.testclient import TestClient
+from qingda.app import create_app
+from qingda.auth import COOKIE
 from test_authentication import BASE, Sms, setup, sms_login
-from wechat_manager.app import create_app
-from wechat_manager.auth import COOKIE
 
 TARGET = "13900000008"
 
@@ -107,7 +107,7 @@ def process_login(config, now, payload, mode, event, queue):
             return await super().verify(phone, cid, code)
 
     if mode.startswith("transaction-"):
-        import wechat_manager.auth as auth
+        import qingda.auth as auth
 
         initialize = auth.initialize_user
 

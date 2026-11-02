@@ -7,12 +7,12 @@ from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
-from wechat_manager.app import create_app
-from wechat_manager.auth import COOKIE
-from wechat_manager.config import Config
-from wechat_manager.security import create_key
-from wechat_manager.sms import AliyunSms, SmsUnavailable
-from wechat_manager.store import Store
+from qingda.app import create_app
+from qingda.auth import COOKIE
+from qingda.config import Config
+from qingda.security import create_key
+from qingda.sms import AliyunSms, SmsUnavailable
+from qingda.store import Store
 
 BASE = "/wechat/api/v1/auth"
 PHONE = "13900000000"
@@ -308,7 +308,7 @@ def test_mismatched_database_version_rejects_startup_without_history_writes(tmp_
     store.receive(b'{"TypeName":"Unknown","Data":{}}')
     before = store.events()
     with store.transaction() as conn:
-        from wechat_manager.store import SCHEMA_VERSION
+        from qingda.store import SCHEMA_VERSION
 
         conn.execute("INSERT INTO schema_versions VALUES(%s)", (SCHEMA_VERSION + 1,))
     with pytest.raises(RuntimeError, match="数据库版本不匹配"):
@@ -403,3 +403,19 @@ def test_limits_require_positive_configuration(tmp_path):
     config.auth_code_ip_daily_limit = 0
     with pytest.raises(ValueError, match="AUTH_CODE_IP_DAILY_LIMIT"):
         config.__post_init__()
+
+
+def test_project_cookie_rename_rejects_old_browser_cookie(tmp_path):
+    http, store, config, sms, clock = setup(tmp_path)
+    result = sms_login(http)
+    assert result.status_code == 200
+    token = result.cookies.get("qingda_session")
+    assert token
+    before = store.query("SELECT count(*) AS n FROM auth_sessions")[0]["n"]
+    http.cookies.clear()
+    http.cookies.set("wechat_manager_session", token, path="/wechat/")
+    assert http.get(BASE + "/session").status_code == 401
+    assert store.query("SELECT count(*) AS n FROM auth_sessions")[0]["n"] == before
+    http.cookies.clear()
+    http.cookies.set("qingda_session", token, path="/wechat/")
+    assert http.get(BASE + "/session").status_code == 200

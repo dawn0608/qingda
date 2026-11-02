@@ -2,10 +2,10 @@
 
 import json
 
+from qingda import automation_defaults
+from qingda.contact_changes import monitor_result, record_evidence
+from qingda.contacts import snapshot
 from test_contact_discovery import setup
-from wechat_manager import automation_defaults
-from wechat_manager.contact_changes import monitor_result, record_evidence
-from wechat_manager.contacts import snapshot
 
 
 async def active(tmp_path):

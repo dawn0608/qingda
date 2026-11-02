@@ -4,12 +4,12 @@ import json
 
 import pytest
 from business_fixtures import contacts
+from qingda.contact_changes import mark_removed, record_evidence
+from qingda.contact_discovery import enqueue, group_members
+from qingda.contacts import enqueue_contacts
+from qingda.store import Store
+from qingda.worker import Worker
 from test_account_refresh import account_service
-from wechat_manager.contact_changes import mark_removed, record_evidence
-from wechat_manager.contact_discovery import enqueue, group_members
-from wechat_manager.contacts import enqueue_contacts
-from wechat_manager.store import Store
-from wechat_manager.worker import Worker
 
 
 async def setup(tmp_path, response=None):

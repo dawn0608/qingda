@@ -4,13 +4,13 @@ import json
 import psycopg
 import pytest
 from auth_fixtures import login
+from qingda import prompt_drafts as drafts
+from qingda.owner_profile import key
+from qingda.reply_prompt import load
+from qingda.tenancy import user_scope
 from test_authentication import setup as auth_setup
 from test_automation import setup
 from test_prompt_drafts import actor, parallel, pending
-from wechat_manager import prompt_drafts as drafts
-from wechat_manager.owner_profile import key
-from wechat_manager.reply_prompt import load
-from wechat_manager.tenancy import user_scope
 
 WXID = "wxid_me"
 
@@ -122,7 +122,7 @@ def test_profile_two_processes_cancellation_and_crash_rollback(tmp_path):
             save(manager, aid, "有界排队")
 
         async def canceled():
-            from wechat_manager.database_async import database_call
+            from qingda.database_async import database_call
 
             request = asyncio.create_task(database_call(save, manager, aid, "取消后核对"))
             await asyncio.sleep(0.1)

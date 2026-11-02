@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 from business_fixtures import database_snapshot
 from contact_fixtures import setup_directory
-from wechat_manager.accounts import AccountService
-from wechat_manager.automation_defaults import seed_directory
-from wechat_manager.contacts import publish_directory
-from wechat_manager.tenancy import user_scope
-from wechat_manager.worker import Worker
+from qingda.accounts import AccountService
+from qingda.automation_defaults import seed_directory
+from qingda.contacts import publish_directory
+from qingda.tenancy import user_scope
+from qingda.worker import Worker
 
 
 async def setup(tmp_path):

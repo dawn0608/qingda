@@ -16,21 +16,21 @@ import httpx
 import pytest
 from auth_fixtures import login_response
 from business_fixtures import allow_reply
+from qingda.media import IncomingMedia
+from qingda.media_decode import prepare_voice, run_process
+from qingda.providers import ProviderError
+from qingda.reply_execution import AUDIT
+from qingda.reply_media import VERSION as IMAGE_POLICY
+from qingda.security import Vault
+from qingda.service import Manager
+from qingda.speech import CONCURRENCY, FINGERPRINT, MODEL, OPTIONS, RESOURCE, AliyunSpeech
+from qingda.store import Store
+from qingda.tenancy import initialize_user, user_scope
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_http import client
 from test_media import MediaGateway, config_at
 from test_worker import Gateway
-from wechat_manager.media import IncomingMedia
-from wechat_manager.media_decode import prepare_voice, run_process
-from wechat_manager.providers import ProviderError
-from wechat_manager.reply_execution import AUDIT
-from wechat_manager.reply_media import VERSION as IMAGE_POLICY
-from wechat_manager.security import Vault
-from wechat_manager.service import Manager
-from wechat_manager.speech import CONCURRENCY, FINGERPRINT, MODEL, OPTIONS, RESOURCE, AliyunSpeech
-from wechat_manager.store import Store
-from wechat_manager.tenancy import initialize_user, user_scope
-from wechat_manager.worker import Worker
 
 KEY = "sk-isolated-private-asr-key-123456"
 

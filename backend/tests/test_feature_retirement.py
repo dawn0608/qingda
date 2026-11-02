@@ -7,9 +7,9 @@ import time
 
 import psycopg
 import pytest
+from qingda.migration import migrate_database
 from test_automation import setup
 from test_http import client
-from wechat_manager.migration import migrate_database
 
 TABLES = (
     "bridge_actions",
@@ -30,6 +30,7 @@ TABLES = (
 
 def legacy(store, version=57):
     with store.transaction() as conn:
+        conn.execute("DROP TABLE chat_history_deletions")
         for name in TABLES:
             conn.execute(f"CREATE TABLE {name}(id text PRIMARY KEY)")
             conn.execute(f"INSERT INTO {name} VALUES('retired')")
@@ -63,7 +64,7 @@ def test_upgrade_removes_only_retired_objects_and_preserves_sent_text(tmp_path, 
     with store.connect() as conn:
         assert all(conn.execute("SELECT to_regclass(%s)", (name,)).fetchone()[0] is None for name in TABLES)
         assert conn.execute("SELECT to_regprocedure('register_credential_route()')").fetchone()[0] is None
-        assert conn.execute("SELECT max(version) FROM schema_versions").fetchone()[0] == 58
+        assert conn.execute("SELECT max(version) FROM schema_versions").fetchone()[0] == 59
         assert not conn.execute("SELECT 1 FROM settings WHERE key LIKE 'bridge%'").fetchone()
         assert not conn.execute("SELECT 1 FROM tasks WHERE kind='bridge'").fetchone()
         row = conn.execute("SELECT * FROM messages WHERE id=999").fetchone()
@@ -93,7 +94,7 @@ def test_independent_processes_serialize_and_recover_after_crash(tmp_path):
     legacy(store)
     ready = tmp_path / "ready"
     env = {**os.environ, "RETIREMENT_TEST_URL": store.url}
-    actor = "import os;from wechat_manager.migration import migrate_database;migrate_database(os.environ['RETIREMENT_TEST_URL'])"
+    actor = "import os;from qingda.migration import migrate_database;migrate_database(os.environ['RETIREMENT_TEST_URL'])"
     holder = subprocess.Popen(
         [
             sys.executable,

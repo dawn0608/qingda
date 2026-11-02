@@ -5,11 +5,11 @@ import json
 from pathlib import Path
 
 import psycopg
-from wechat_manager.config import Config
-from wechat_manager.prompt_sync import apply, digest, preview
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
+from qingda.config import Config
+from qingda.prompt_sync import apply, digest, preview
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
 
 
 def main():

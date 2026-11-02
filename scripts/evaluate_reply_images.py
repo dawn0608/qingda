@@ -14,13 +14,13 @@ from types import SimpleNamespace
 import psycopg
 from evaluate_reply_batches import ReadSettings, grade
 from PIL import Image, ImageDraw, ImageFont
+from qingda.config import Config
+from qingda.media import image_frames
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.reply_prompt import load
+from qingda.security import Vault
 from reply_evaluation import account_prompt, prompt_metrics
-from wechat_manager.config import Config
-from wechat_manager.media import image_frames
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_prompt import load
-from wechat_manager.security import Vault
 
 
 async def evaluate(args):
@@ -113,7 +113,7 @@ async def evaluate(args):
                     args.baseline / "prompts/auto_reply.md" if args.baseline else config.prompt_file,
                 )
                 if args.baseline:
-                    from wechat_manager.private_context import emotion_tokens
+                    from qingda.private_context import emotion_tokens
 
                     template = "\n".join(
                         (args.baseline / ("prompts/" + name + ".md")).read_text()
@@ -163,7 +163,7 @@ async def evaluate(args):
                         "error": getattr(exc, "reason", type(exc).__name__),
                         "images": list(request_images),
                     }
-                from wechat_manager.reply_decisions import TOOL
+                from qingda.reply_decisions import TOOL
 
                 item["duration_ms"] = int((time.monotonic() - started) * 1000)
                 item["prompt_metrics"] = prompt_metrics(rendered, TOOL)

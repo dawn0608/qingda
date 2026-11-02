@@ -1813,10 +1813,10 @@ INSERT INTO schema_versions VALUES(58);
 INSERT INTO history_id_watermarks(name,value) VALUES('events',0),('messages',0);
 INSERT INTO web_tool_rate_limits(resource) VALUES('search'),('fetch');
 DO $$ BEGIN
- IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='wechat_manager_app') THEN
-  EXECUTE format('GRANT USAGE ON SCHEMA %I TO wechat_manager_app',current_schema());
-  EXECUTE format('GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA %I TO wechat_manager_app',current_schema());
-  EXECUTE format('GRANT USAGE,SELECT,UPDATE ON ALL SEQUENCES IN SCHEMA %I TO wechat_manager_app',current_schema());
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='qingda_app') THEN
+  EXECUTE format('GRANT USAGE ON SCHEMA %I TO qingda_app',current_schema());
+  EXECUTE format('GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA %I TO qingda_app',current_schema());
+  EXECUTE format('GRANT USAGE,SELECT,UPDATE ON ALL SEQUENCES IN SCHEMA %I TO qingda_app',current_schema());
  END IF;
 END $$;
 
@@ -1858,8 +1858,8 @@ ALTER TABLE reply_decisions DROP CONSTRAINT IF EXISTS reply_decisions_action_che
 ALTER TABLE reply_decisions ADD CONSTRAINT reply_decisions_action_check
     CHECK(action IN ('reply','silent','wait'));
 DO $$ BEGIN
- IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='wechat_manager_app') THEN
-  GRANT SELECT,INSERT,UPDATE,DELETE ON reply_input_waits TO wechat_manager_app;
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='qingda_app') THEN
+  GRANT SELECT,INSERT,UPDATE,DELETE ON reply_input_waits TO qingda_app;
  END IF;
 END $$;
 

@@ -8,13 +8,13 @@ import sys
 from pathlib import Path
 
 import pytest
+from qingda import input_waits, reply_decisions
+from qingda.providers import ProviderError
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_group_wakeup import group_setup, text
 from test_reply_strategy import decision, latest
 from test_worker import Gateway
-from wechat_manager import input_waits, reply_decisions
-from wechat_manager.providers import ProviderError
-from wechat_manager.worker import Worker
 
 
 class WaitingGateway(Gateway):
@@ -399,7 +399,7 @@ async def test_pure_image_collects_without_model_or_download(tmp_path):
 
 
 async def test_wait_records_are_tenant_scoped(tmp_path):
-    from wechat_manager.tenancy import user_scope
+    from qingda.tenancy import user_scope
 
     s, _, _, _, _, worker = await begin(tmp_path)
     try:

@@ -89,7 +89,7 @@ def prepare(folder):
     write(folder / "domain-root-env.before", (APP / ".env").read_bytes())
     write(folder / "domain-nginx.before", Gateway().read_bytes())
     backup_state(folder / "domain-proxy-state.tar.gz")
-    from wechat_manager.migration import backup_database
+    from qingda.migration import backup_database
 
     backup_database(dotenv_values(APP / ".env")["DATABASE_URL"], folder / "domain-before.dump")
     names = (
@@ -213,13 +213,13 @@ def activate(folder):
 
 async def bind_users(folder):
     from fastapi import HTTPException
-    from wechat_manager.config import Config
-    from wechat_manager.profile import Wechat, bind_wechat
-    from wechat_manager.providers import Gateway as Provider
-    from wechat_manager.security import Vault
-    from wechat_manager.service import Manager
-    from wechat_manager.store import Store
-    from wechat_manager.tenancy import user_scope
+    from qingda.config import Config
+    from qingda.profile import Wechat, bind_wechat
+    from qingda.providers import Gateway as Provider
+    from qingda.security import Vault
+    from qingda.service import Manager
+    from qingda.store import Store
+    from qingda.tenancy import user_scope
 
     state = load(folder)
     if state["stage"] not in ("binding", "bound") or not PAUSE.exists():

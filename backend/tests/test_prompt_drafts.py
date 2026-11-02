@@ -9,10 +9,10 @@ from pathlib import Path
 import psycopg
 import pytest
 from auth_fixtures import login
+from qingda import prompt_drafts as drafts
+from qingda.tenancy import user_scope
 from test_authentication import setup as auth_setup
 from test_automation import NOW, setup
-from wechat_manager import prompt_drafts as drafts
-from wechat_manager.tenancy import user_scope
 
 
 def pending(store, manager, account, conversation):
@@ -41,8 +41,8 @@ def test_draft_persistence_does_not_change_active_prompt_or_tasks(tmp_path):
         before["ai_since"],
     )
     assert store.query("SELECT state FROM tasks WHERE id=%s", (task["id"],))[0]["state"] == "queued"
-    from wechat_manager.service import Manager
-    from wechat_manager.store import Store
+    from qingda.service import Manager
+    from qingda.store import Store
 
     restarted = Store(store.url)
     try:
@@ -219,7 +219,7 @@ def test_two_users_and_accounts_have_independent_drafts(tmp_path):
 
 
 def test_row_lock_wait_is_bounded_and_cancellation_keeps_committed_result_recoverable(tmp_path):
-    from wechat_manager.database_async import database_call
+    from qingda.database_async import database_call
 
     store, manager, account, conversation = setup(tmp_path)
     initial = drafts.read(manager, account["id"])

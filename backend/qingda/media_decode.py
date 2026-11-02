@@ -259,7 +259,7 @@ def playback_slot(directory):
 def playback_voice(path, output, ffmpeg):
     from types import SimpleNamespace
 
-    from wechat_manager.speech import inspect_voice
+    from qingda.speech import inspect_voice
 
     with playback_slot(path.parent.parent):
         body = path.read_bytes()

@@ -9,11 +9,11 @@ import httpx
 import uvicorn
 from fastapi import Request, Response
 
-from wechat_manager.app import create_app
-from wechat_manager.config import Config
-from wechat_manager.migration import migrate_database
-from wechat_manager.providers import Gateway
-from wechat_manager.security import PASSWORD_HASHER, create_key
+from qingda.app import create_app
+from qingda.config import Config
+from qingda.migration import migrate_database
+from qingda.providers import Gateway
+from qingda.security import PASSWORD_HASHER, create_key
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
     config = Config(args.directory, args.directory / "master.key", args.directory / "callback.key",
                     public_url=f"http://127.0.0.1:{args.port}", cookie_secure=False,
                     auth_phone_number="13900000000", wechat_token="isolated-only")
-    if not urlsplit(config.database_url).path.lstrip("/").startswith("wechat_manager_assistant_layout_eval_"):
+    if not urlsplit(config.database_url).path.lstrip("/").startswith("qingda_assistant_layout_eval_"):
         raise RuntimeError("UI夹具仅允许专用服务器隔离数据库")
     migrate_database(config.database_url)
 

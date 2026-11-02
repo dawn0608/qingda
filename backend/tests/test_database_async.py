@@ -3,7 +3,7 @@
 import asyncio
 
 import pytest
-from wechat_manager import database_async
+from qingda import database_async
 
 
 async def test_cancellation_at_capacity_grant_is_not_swallowed(monkeypatch):

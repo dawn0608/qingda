@@ -5,12 +5,12 @@ import os
 import sys
 from pathlib import Path
 
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import current_user
+from qingda.worker import Worker
 from test_automation import NOW
 from test_reply_images import Images, media
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user
-from wechat_manager.worker import Worker
 
 current_user.set(1)
 

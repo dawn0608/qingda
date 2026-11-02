@@ -6,7 +6,7 @@ import os
 import sys
 import time
 
-from wechat_manager.web_tools import WebRateLimiter
+from qingda.web_tools import WebRateLimiter
 
 
 async def main():

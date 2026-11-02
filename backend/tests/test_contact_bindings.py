@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
+from qingda.app import create_app
+from qingda.auth import COOKIE
 from test_authentication import BASE, PHONE, Sms, code_login, setup, sms_login
-from wechat_manager.app import create_app
-from wechat_manager.auth import COOKIE
 
 
 def authenticated(tmp_path):

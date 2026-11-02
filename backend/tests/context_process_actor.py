@@ -8,12 +8,12 @@ from contextlib import ExitStack
 from pathlib import Path
 from types import SimpleNamespace
 
-from wechat_manager import context_snapshot
-from wechat_manager.history_tool import HistoryReader
-from wechat_manager.media import IncomingMedia
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user
+from qingda import context_snapshot
+from qingda.history_tool import HistoryReader
+from qingda.media import IncomingMedia
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import current_user
 
 current_user.set(int(os.getenv("ACTOR_USER_ID", "1")))
 store = Store(os.environ["ACTOR_DATABASE_URL"])

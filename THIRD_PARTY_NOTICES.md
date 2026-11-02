@@ -18,7 +18,7 @@ Inter 4.001 与 Noto Sans SC 2.004 采用 SIL Open Font License 1.1。仓库包�
 
 ## DeepSeek 分词资源
 
-`backend/wechat_manager/tokenizer/tokenizer.json` 来自 DeepSeek 官方发布的分词资源，来源及哈希见[分词资源说明](backend/wechat_manager/tokenizer/README.md)。本项目不拥有该资源的版权，也不将其重新授权为 MIT；其使用和再分发须遵循上游适用条款。本仓库的来源记录不代表已取得额外的再许可权。
+`backend/wechat_manager/tokenizer/tokenizer.json` 来自 DeepSeek 官方发布的分词资源，来源及哈希见[分词资源说明](backend/qingda/tokenizer/README.md)。本项目不拥有该资源的版权，也不将其重新授权为 MIT；其使用和再分发须遵循上游适用条款。本仓库的来源记录不代表已取得额外的再许可权。
 
 ## 外部来源与依赖
 

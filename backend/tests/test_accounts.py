@@ -1,10 +1,10 @@
 import json
 
 from auth_fixtures import login_response
+from qingda.service import Manager
+from qingda.store import Store
 from test_database import database_url
 from test_http import client
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
 
 
 class AccountGateway:

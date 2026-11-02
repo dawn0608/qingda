@@ -2,12 +2,12 @@ import asyncio
 import json
 
 import pytest
+from qingda.providers import ProviderError
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.worker import Worker
 from test_automation import NOW
 from test_database import database_url
-from wechat_manager.providers import ProviderError
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.worker import Worker
 
 
 class Gateway:
@@ -219,7 +219,7 @@ async def test_invalid_or_non_live_identity_is_preserved_without_discovery(tmp_p
 
 
 async def test_late_profile_cannot_restore_archived_candidate(tmp_path):
-    from wechat_manager.accounts import AccountService
+    from qingda.accounts import AccountService
 
     store = Store(database_url(tmp_path / "test.db"))
     manager = Manager(store, clock=lambda: NOW)

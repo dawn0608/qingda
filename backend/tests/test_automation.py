@@ -2,9 +2,9 @@ import json
 
 import pytest
 from business_fixtures import allow_reply
+from qingda.service import Manager
+from qingda.store import Store
 from test_database import database_url
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
 
 NOW = 1791448900.0
 

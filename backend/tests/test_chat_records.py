@@ -4,8 +4,8 @@ import json
 
 import pytest
 from contact_fixtures import setup_directory
-from wechat_manager.media_references import record_outbound
-from wechat_manager.tenancy import user_scope
+from qingda.media_references import record_outbound
+from qingda.tenancy import user_scope
 
 
 def incoming(store, manager, platform, msg_type="1", content="正文", peer="alice", sender=None, now=None):
@@ -234,7 +234,7 @@ def test_auth_user_isolation_and_empty_history(tmp_path):
     uid = response.json()["user_id"]
     with user_scope(uid):
         assert store.query("SELECT id FROM accounts WHERE id=%s", (aid,)) == []
-        from wechat_manager.chat_records import history
+        from qingda.chat_records import history
 
         with pytest.raises(ValueError, match="会话不存在"):
             history(manager, aid, conv["id"])

@@ -15,11 +15,11 @@ def postgres_resources(monkeypatch, tmp_path):
     base = os.getenv("TEST_DATABASE_URL", "")
     if os.name == "nt" or "test" not in urlsplit(base).path:
         raise RuntimeError("仅允许服务器隔离 PostgreSQL 测试库")
-    from wechat_manager.config import Config
-    from wechat_manager.migration import migrate_database
-    from wechat_manager.security import Vault, create_key, digest
-    from wechat_manager.store import Store
-    from wechat_manager.tenancy import initialize_user, user_scope
+    from qingda.config import Config
+    from qingda.migration import migrate_database
+    from qingda.security import Vault, create_key, digest
+    from qingda.store import Store
+    from qingda.tenancy import initialize_user, user_scope
 
     schemas, stores = {}, []
     original_store, original_config = Store.__init__, Config.__post_init__
@@ -72,7 +72,7 @@ def postgres_resources(monkeypatch, tmp_path):
 def isolated_role(postgres_resources):
     """以服务器 peer 运维身份创建短期 RLS 测试角色，不扩大业务角色权限。"""
     base = urlsplit(os.environ["TEST_DATABASE_URL"])
-    role = "wechat_manager_rls_test_" + uuid.uuid4().hex
+    role = "qingda_rls_test_" + uuid.uuid4().hex
 
     def execute(statement):
         subprocess.run(

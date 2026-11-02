@@ -4,10 +4,10 @@ import json
 
 import pytest
 from business_fixtures import allow_reply
+from qingda.service import Manager
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_worker import Gateway
-from wechat_manager.service import Manager
-from wechat_manager.worker import Worker
 
 GROUP = "group@chatroom"
 

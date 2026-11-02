@@ -6,9 +6,9 @@ import signal
 import sys
 from types import SimpleNamespace
 
-from wechat_manager.reply_execution import Execution
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user
+from qingda.reply_execution import Execution
+from qingda.store import Store
+from qingda.tenancy import current_user
 
 current_user.set(int(os.getenv("ACTOR_USER_ID", "1")))
 resource = os.getenv("ACTOR_RESOURCE", "test-capacity")

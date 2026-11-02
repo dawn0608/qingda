@@ -10,13 +10,13 @@ from pathlib import Path
 import httpx
 import uvicorn
 from fastapi import HTTPException, Request
-from wechat_manager.accounts import AccountService
-from wechat_manager.app import create_app
-from wechat_manager.auth import COOKIE
-from wechat_manager.config import Config
-from wechat_manager.providers import Gateway
-from wechat_manager.security import PASSWORD_HASHER, create_key, digest
-from wechat_manager.store import Store
+from qingda.accounts import AccountService
+from qingda.app import create_app
+from qingda.auth import COOKIE
+from qingda.config import Config
+from qingda.providers import Gateway
+from qingda.security import PASSWORD_HASHER, create_key, digest
+from qingda.store import Store
 
 
 def main():

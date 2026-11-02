@@ -4,15 +4,15 @@ import asyncio
 import json
 from types import SimpleNamespace
 
-from wechat_manager.config import Config
-from wechat_manager.model_settings import DEFAULT_MODEL
-from wechat_manager.providers import Gateway, ProviderError
-from wechat_manager.reply_tools import ReplyTools
-from wechat_manager.security import Vault
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
-from wechat_manager.tool_generation import generate
+from qingda.config import Config
+from qingda.model_settings import DEFAULT_MODEL
+from qingda.providers import Gateway, ProviderError
+from qingda.reply_tools import ReplyTools
+from qingda.security import Vault
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
+from qingda.tool_generation import generate
 
 
 async def main():

@@ -1,11 +1,11 @@
 import pytest
+from qingda import automation_defaults, prompt_drafts
+from qingda.reply_prompt import load_default
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
 from test_database import database_url
 from test_prompt_drafts import actor, parallel
-from wechat_manager import automation_defaults, prompt_drafts
-from wechat_manager.reply_prompt import load_default
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
 
 
 def legacy(tmp_path):

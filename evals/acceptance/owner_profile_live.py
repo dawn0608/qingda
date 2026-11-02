@@ -8,14 +8,14 @@ import os
 import re
 from pathlib import Path
 
-from wechat_manager.config import Config
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_prompt import load, load_default
-from wechat_manager.security import Vault
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
+from qingda.config import Config
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.reply_prompt import load, load_default
+from qingda.security import Vault
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
 
 
 async def main():

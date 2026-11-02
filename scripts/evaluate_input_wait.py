@@ -10,12 +10,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from evaluate_reply_batches import ReadSettings
-from wechat_manager.config import ROOT, Config
-from wechat_manager.input_waits import classify
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.security import Vault
-from wechat_manager.tenancy import user_scope
+from qingda.config import ROOT, Config
+from qingda.input_waits import classify
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.security import Vault
+from qingda.tenancy import user_scope
 
 
 class EvaluationBudget:

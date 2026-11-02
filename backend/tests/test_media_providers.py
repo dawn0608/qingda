@@ -4,9 +4,9 @@ import socket
 
 import httpx
 import pytest
+from qingda.providers import Gateway, ProviderError
+from qingda.security import Vault, create_key
 from test_automation import setup as setup_account
-from wechat_manager.providers import Gateway, ProviderError
-from wechat_manager.security import Vault, create_key
 
 
 def setup(tmp_path):

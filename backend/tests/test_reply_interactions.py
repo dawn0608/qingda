@@ -11,18 +11,18 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+from qingda.providers import Gateway as RealGateway
+from qingda.providers import ProviderError
+from qingda.reply_decisions import validate
+from qingda.reply_profiles import check_weather_location
+from qingda.reply_tools import ToolFailure
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_dialogue_windows import private_pat
 from test_group_wakeup import group_setup, pat, text
 from test_reply_strategy import decision
 from test_reply_tools import ReplyTools, config
 from test_worker import Gateway
-from wechat_manager.providers import Gateway as RealGateway
-from wechat_manager.providers import ProviderError
-from wechat_manager.reply_decisions import validate
-from wechat_manager.reply_profiles import check_weather_location
-from wechat_manager.reply_tools import ToolFailure
-from wechat_manager.worker import Worker
 
 
 @pytest.mark.parametrize("group", [False, True])
@@ -247,7 +247,7 @@ def test_two_process_pat_revision_capacity_and_crash_recovery(tmp_path, terminat
         **os.environ,
         "ACTOR_DATABASE_URL": s.url,
         "ACTOR_CLOCK": str(NOW + 10),
-        "PGAPPNAME": "wechat-manager-reply-policy-actor",
+        "PGAPPNAME": "qingda-reply-policy-actor",
     }
     first = subprocess.Popen(
         [sys.executable, str(actor), "hold"], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -285,7 +285,7 @@ def test_two_process_pat_revision_capacity_and_crash_recovery(tmp_path, terminat
         assert s.query("SELECT * FROM worker_lock") == []
         assert (
             s.query(
-                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='wechat-manager-reply-policy-actor'"
+                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='qingda-reply-policy-actor'"
             )[0]["n"]
             == 0
         )

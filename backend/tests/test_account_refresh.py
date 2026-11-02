@@ -1,12 +1,12 @@
 import json
 
 import pytest
+from qingda.accounts import AccountService
+from qingda.providers import ProviderError
+from qingda.service import Manager
+from qingda.store import Store
 from test_accounts import AccountGateway
 from test_database import database_url
-from wechat_manager.accounts import AccountService
-from wechat_manager.providers import ProviderError
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
 
 NOW = 1791590400.0
 

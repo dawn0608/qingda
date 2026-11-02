@@ -43,7 +43,7 @@ def run(port=17952):
 
         def reply(self, status):
             self.send_response(status)
-            self.send_header("X-Callback-Receiver", "wechat-manager-postgres-buffer")
+            self.send_header("X-Callback-Receiver", "qingda-postgres-buffer")
             self.send_header("Content-Length", "0")
             self.end_headers()
 

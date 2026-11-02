@@ -7,11 +7,11 @@ from urllib.parse import urlsplit
 
 import httpx
 import uvicorn
-from wechat_manager.app import create_app
-from wechat_manager.config import Config
-from wechat_manager.migration import migrate_database
-from wechat_manager.providers import Gateway
-from wechat_manager.security import PASSWORD_HASHER, create_key
+from qingda.app import create_app
+from qingda.config import Config
+from qingda.migration import migrate_database
+from qingda.providers import Gateway
+from qingda.security import PASSWORD_HASHER, create_key
 
 
 class Sms:
@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--port", type=int, default=17964)
     args = parser.parse_args()
     database = os.environ["DATABASE_URL"]
-    if not urlsplit(database).path.startswith("/wechat_manager_account_settings_eval_"):
+    if not urlsplit(database).path.startswith("/qingda_account_settings_eval_"):
         raise RuntimeError("仅允许账户设置隔离数据库")
     args.directory.mkdir(parents=True, exist_ok=True)
     if not (args.directory / "master.key").exists():

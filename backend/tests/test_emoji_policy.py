@@ -8,11 +8,11 @@ import zipfile
 import pytest
 from business_fixtures import allow_reply
 from PIL import Image
+from qingda.config import Config
+from qingda.media import IncomingMedia
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_media import MediaGateway
-from wechat_manager.config import Config
-from wechat_manager.media import IncomingMedia
-from wechat_manager.worker import Worker
 
 
 def image_bytes(fmt="GIF", animated=True, zipped=False):
@@ -159,7 +159,7 @@ async def test_animated_picture_is_excluded_without_any_model_call(tmp_path, fmt
 
 
 async def test_native_text_emoji_keeps_existing_semantics(tmp_path):
-    from wechat_manager.private_context import emotions
+    from qingda.private_context import emotions
 
     token, meaning = next(iter(emotions().items()))
     store, manager, gateway, worker, peer = fixture(tmp_path, OSError("must not download"))
@@ -241,7 +241,7 @@ async def test_recent_custom_and_quoted_custom_never_become_media_dependencies(t
 
 @pytest.mark.parametrize("with_trace", [False, True])
 async def test_legacy_animated_picture_cache_cannot_enter_context(tmp_path, with_trace):
-    from wechat_manager.private_context import input_allowed
+    from qingda.private_context import input_allowed
 
     body = image_bytes()
     store, manager, gateway, worker, peer = fixture(tmp_path, body)

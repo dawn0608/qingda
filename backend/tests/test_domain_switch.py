@@ -22,10 +22,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "deploy"))
 import domain
 import native_nginx
 import update
+from qingda.config import Config
+from qingda.profile import Wechat, bind_wechat
+from qingda.providers import ProviderError
 from test_authentication import setup
-from wechat_manager.config import Config
-from wechat_manager.profile import Wechat, bind_wechat
-from wechat_manager.providers import ProviderError
 
 
 def test_public_filing_and_strict_origin(tmp_path):
@@ -262,9 +262,9 @@ def test_two_process_binding_replay_capacity_cancel_crash_and_expiry(tmp_path, m
         async def close(self):
             pass
 
-    import wechat_manager.providers
+    import qingda.providers
 
-    monkeypatch.setattr(wechat_manager.providers, "Gateway", Provider)
+    monkeypatch.setattr(qingda.providers, "Gateway", Provider)
     lock = tmp_path / "operation.lock"
     actor = context.Process(target=_bind_actor, args=(str(folder), str(lock), str(tmp_path / "first")))
     actor.start()
@@ -365,7 +365,7 @@ def test_systemd_pause_condition_prevents_restart(tmp_path):
         subprocess.run(
             [
                 "systemd-run",
-                "--unit=wechat-manager-domain-test-" + str(os.getpid()) + "-" + str(iteration),
+                "--unit=qingda-domain-test-" + str(os.getpid()) + "-" + str(iteration),
                 "--collect",
                 "--wait",
                 "--property=ConditionPathExists=!" + str(marker),

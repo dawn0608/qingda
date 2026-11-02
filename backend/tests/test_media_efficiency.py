@@ -10,14 +10,14 @@ from pathlib import Path
 
 import pytest
 from business_fixtures import allow_reply
+from qingda.media import IncomingMedia
+from qingda.providers import ProviderError
+from qingda.reply_execution import Execution
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_media import MediaGateway, config_at
 from test_reply_images import picture, png
 from test_worker import Gateway
-from wechat_manager.media import IncomingMedia
-from wechat_manager.providers import ProviderError
-from wechat_manager.reply_execution import Execution
-from wechat_manager.worker import Worker
 
 
 def environment(tmp_path):
@@ -120,7 +120,7 @@ async def test_two_process_capacity_cancel_crash_and_expiry(tmp_path, ending):
 
 
 async def test_restart_budget_and_user_isolation(tmp_path):
-    from wechat_manager.tenancy import user_scope
+    from qingda.tenancy import user_scope
 
     store, manager, _, _ = environment(tmp_path)
     deliver(store, manager, 1)
@@ -154,8 +154,8 @@ async def test_restart_budget_and_user_isolation(tmp_path):
 
 
 async def test_two_users_processes_share_four_active_tasks(tmp_path):
+    from qingda.tenancy import initialize_user, user_scope
     from test_automation import verified_fixture
-    from wechat_manager.tenancy import initialize_user, user_scope
 
     store, manager, account, _ = environment(tmp_path)
     with store.connect() as conn:

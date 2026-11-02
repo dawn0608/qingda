@@ -39,7 +39,7 @@ def contacts(manager, aid, kind="friend", q="", offset=0, limit=50):
 
 
 def queue_contact_check(http, cid):
-    from wechat_manager.contact_changes import enqueue_verification
+    from qingda.contact_changes import enqueue_verification
 
     manager = http.app.state.manager
     with manager.store.transaction() as conn:

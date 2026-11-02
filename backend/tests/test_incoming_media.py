@@ -5,13 +5,13 @@ import httpx
 import pytest
 from business_fixtures import allow_reply, phone_takeover
 from PIL import Image
+from qingda.config import Config
+from qingda.providers import Gateway as RealGateway
+from qingda.security import Vault, create_key
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_media import MediaGateway as ToolMediaGateway
 from test_worker import Gateway
-from wechat_manager.config import Config
-from wechat_manager.providers import Gateway as RealGateway
-from wechat_manager.security import Vault, create_key
-from wechat_manager.worker import Worker
 
 
 @pytest.mark.parametrize(
@@ -82,7 +82,7 @@ def test_excluded_group_emoji_retains_actual_sender_and_structured_mentions(tmp_
 
 
 async def test_worker_downloads_image_and_reuses_persisted_media(tmp_path):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     manager.media = IncomingMedia(manager, Config(tmp_path, tmp_path / "key"))
@@ -128,7 +128,7 @@ async def test_worker_downloads_image_and_reuses_persisted_media(tmp_path):
 
 
 async def test_deepseek_receives_image_bytes_and_explicit_history_current(tmp_path):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     create_key(tmp_path / "key")
@@ -167,7 +167,7 @@ async def test_deepseek_receives_image_bytes_and_explicit_history_current(tmp_pa
 
 
 async def test_voice_transcript_is_persisted_and_only_text_is_replied(tmp_path):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     audio = b"\x02#!SILK_V3" + b"\x01\x00x" * 100
@@ -228,7 +228,7 @@ async def test_voice_transcript_is_persisted_and_only_text_is_replied(tmp_path):
     ],
 )
 async def test_skipped_media_never_downloads_or_calls_a_model(tmp_path, extra):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     manager.media = IncomingMedia(manager, Config(tmp_path, tmp_path / "key"))
@@ -281,7 +281,7 @@ async def test_custom_emoji_never_downloads_or_calls_models(tmp_path):
     ids=["broken-image", "incomplete-silk", "voice-over-3mb", "voice-over-60s"],
 )
 async def test_damaged_or_oversized_media_is_marked_missing_without_asr(tmp_path, msg_type, body):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
 
@@ -318,7 +318,7 @@ async def test_damaged_or_oversized_media_is_marked_missing_without_asr(tmp_path
 
 
 async def test_missing_asr_credentials_marks_voice_missing_and_other_tasks_continue(tmp_path):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, _ = setup(tmp_path)
     image = io.BytesIO()
@@ -354,7 +354,7 @@ async def test_missing_asr_credentials_marks_voice_missing_and_other_tasks_conti
 
 @pytest.mark.parametrize("blocked", ["account", "whitelist", "group", "expired"])
 async def test_media_guard_rejection_prevents_download_and_generation(tmp_path, blocked):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, account, conv = setup(tmp_path)
     peer = "friend"
@@ -393,7 +393,7 @@ async def test_media_guard_rejection_prevents_download_and_generation(tmp_path, 
 
 
 async def test_takeover_during_voice_download_cancels_before_asr_and_model(tmp_path):
-    from wechat_manager.media import IncomingMedia
+    from qingda.media import IncomingMedia
 
     store, manager, _, conv = setup(tmp_path)
 

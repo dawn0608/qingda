@@ -14,21 +14,21 @@ from urllib.parse import quote, urlsplit
 import psycopg
 from dotenv import dotenv_values
 from evaluate_reply_batches import ReadSettings
+from qingda import context_budget, context_snapshot
+from qingda.config import ROOT, Config
+from qingda.history_tool import TOOL as HISTORY_TOOL
+from qingda.history_tool import HistoryReader
+from qingda.migration import migrate_database
+from qingda.model_settings import effective_model
+from qingda.providers import Gateway
+from qingda.reply_decisions import TOOL as FINISH_TOOL
+from qingda.reply_prompt import load
+from qingda.reply_tools import TOOLS
+from qingda.security import Vault
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import current_user, initialize_user, user_scope
 from reply_evaluation import account_prompt as read_account_prompt
-from wechat_manager import context_budget, context_snapshot
-from wechat_manager.config import ROOT, Config
-from wechat_manager.history_tool import TOOL as HISTORY_TOOL
-from wechat_manager.history_tool import HistoryReader
-from wechat_manager.migration import migrate_database
-from wechat_manager.model_settings import effective_model
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_decisions import TOOL as FINISH_TOOL
-from wechat_manager.reply_prompt import load
-from wechat_manager.reply_tools import TOOLS
-from wechat_manager.security import Vault
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user, initialize_user, user_scope
 
 
 def fixtures(database):
@@ -139,8 +139,8 @@ def populate_fixtures(url, schema):
 async def evaluate(args):
     # 生产仅读取模型设置、密钥和账号提示词；所有聊天夹具与任务只写隔离库。
     production = dotenv_values(args.production_root / ".env")
-    if not args.database or urlsplit(args.database).path != "/wechat_manager_context_test":
-        raise ValueError("评测仅允许项目专用隔离库 wechat_manager_context_test")
+    if not args.database or urlsplit(args.database).path != "/qingda_context_test":
+        raise ValueError("评测仅允许项目专用隔离库 qingda_context_test")
     for key, value in production.items():
         if key in ("APP_ROOT", "APP_REVISION") and key in os.environ:
             continue
@@ -156,7 +156,7 @@ async def evaluate(args):
     cases = json.loads((ROOT / "evals/acceptance/reply-context.json").read_text())
     source_hashes = {
         str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-        for folder, pattern in (("backend/wechat_manager", "*.py"), ("prompts", "*.md"))
+        for folder, pattern in (("backend/qingda", "*.py"), ("prompts", "*.md"))
         for path in (ROOT / folder).glob(pattern)
     }
     args.output.mkdir(parents=True, exist_ok=True, mode=0o700)

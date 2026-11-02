@@ -5,15 +5,15 @@ import json
 
 import httpx
 import pytest
+from qingda.model_settings import DEFAULT_MODEL, effective_model, masked_key
+from qingda.providers import Gateway
+from qingda.reply_execution import Execution, estimate
+from qingda.security import Vault, create_key
+from qingda.tenancy import current_user, user_scope
+from qingda.tool_generation import Checkpoint, generate
 from test_automation import deliver, setup
 from test_reply_strategy import decision, final
 from test_reply_tools import Model, ReplyTools, call, config, response
-from wechat_manager.model_settings import DEFAULT_MODEL, effective_model, masked_key
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_execution import Execution, estimate
-from wechat_manager.security import Vault, create_key
-from wechat_manager.tenancy import current_user, user_scope
-from wechat_manager.tool_generation import Checkpoint, generate
 
 
 @pytest.mark.parametrize(

@@ -2245,7 +2245,7 @@ wheels = [
 ]
 
 [[package]]
-name = "wechat-manager"
+name = "qingda"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

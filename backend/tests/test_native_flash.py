@@ -7,19 +7,19 @@ import wave
 import httpx
 import pytest
 from auth_fixtures import login_response
+from qingda.media import IncomingMedia
+from qingda.media_decode import decode
+from qingda.model_settings import DEFAULT_MODEL, effective_model
+from qingda.providers import Gateway, ProviderError
+from qingda.reply_media import VERSION
+from qingda.security import Vault
+from qingda.speech import inspect_voice
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_emoji_policy import image_bytes
 from test_group_wakeup import GROUP, group_setup, pat
 from test_http import client
 from test_media import MediaGateway, config_at
-from wechat_manager.media import IncomingMedia
-from wechat_manager.media_decode import decode
-from wechat_manager.model_settings import DEFAULT_MODEL, effective_model
-from wechat_manager.providers import Gateway, ProviderError
-from wechat_manager.reply_media import VERSION
-from wechat_manager.security import Vault
-from wechat_manager.speech import inspect_voice
-from wechat_manager.worker import Worker
 
 
 def test_fixed_model_and_new_key_validation(tmp_path):

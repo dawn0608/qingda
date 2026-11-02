@@ -3,9 +3,9 @@ import json
 import pytest
 from business_fixtures import queue_contact_check
 from contact_fixtures import setup_directory
+from qingda.accounts import AccountService
+from qingda.worker import Worker
 from test_contact_removal import delete_event
-from wechat_manager.accounts import AccountService
-from wechat_manager.worker import Worker
 
 
 def modify_event(store, manager, peer, **changes):
@@ -187,7 +187,7 @@ async def test_postgres_restart_preserves_pending_verification_and_evidence(tmp_
     await AccountService(manager, c.app.state.gateway).online(aid)
     conv = manager.ensure_conversation(aid, "alice")
     delete_event(store, manager, "alice")
-    from wechat_manager.contact_changes import enqueue_verification
+    from qingda.contact_changes import enqueue_verification
 
     with store.transaction() as conn:
         enqueue_verification(conn, aid, "alice", manager.clock())

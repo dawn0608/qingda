@@ -8,9 +8,9 @@
 
 ## 初始化与权限
 
-`backend/wechat_manager/sql/058_baseline.sql` 是初始化基线，`059_chat_history_deletions.sql` 增补逐用户清空进度，当前结构为59。显式执行 `python -m wechat_manager migrate-db` 创建新库结构和主密钥；不预置账号，用户通过验证码首次登录创建。旧库51–53先补齐等待记录，再从54–57显式升级至58，最后升级至59；迁移前保护原始备份，服务启动不执行迁移。等待及清空记录沿用逐用户RLS和复合外键，重启不重新消费旧回复。
+`backend/qingda/sql/058_baseline.sql` 是初始化基线，`059_chat_history_deletions.sql` 增补逐用户清空进度，当前结构为59。显式执行 `python -m qingda migrate-db` 创建新库结构和主密钥；不预置账号，用户通过验证码首次登录创建。旧库51–53先补齐等待记录，再从54–57显式升级至58，最后升级至59；迁移前保护原始备份，服务启动不执行迁移。等待及清空记录沿用逐用户RLS和复合外键，重启不重新消费旧回复。
 
-生产使用 `wechat_manager_owner` 管理对象，migration 身份执行结构变更，app 身份运行 Web/Worker。业务表强制 RLS；用户范围来自验证后的会话、逐用户回调，缺少范围默认拒绝。
+生产使用 `qingda_owner` 管理对象，migration 身份执行结构变更，app 身份运行 Web/Worker。业务表强制 RLS；用户范围来自验证后的会话、逐用户回调，缺少范围默认拒绝。
 
 新库与升级库的表、列、索引、约束、视图、触发器、RLS 和运行授权须等价。结构变化在服务切换期间显式完成，提交后保留最新数据，只允许同结构恢复或前向修复。
 
@@ -27,3 +27,5 @@
 使用 `deploy/server.py backup` 生成 PostgreSQL custom-format 备份，实际恢复检查成功后才轮转。备份包含配置、主密钥、媒体及网关证书状态，放在 `/var/backups/qingda` 并走统一保留入口。
 
 管理工具通过已授权的 SSH 隧道连接服务器本机 PostgreSQL，使用对应管理角色。不得开放数据库公网端口。
+
+项目数据库及角色按 `qingda` 命名，评测与演练库沿用 `qingda_` 前缀。名称切换由独立运维工具按 OID 原地改名，不复制重建业务库；业务 schema 版本保持59。一次性回调导入收据保存在独立 `qingda_migration_audit` schema，与业务接收同事务提交，保留用于恢复去重，不授予业务角色访问。

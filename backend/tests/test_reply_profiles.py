@@ -5,14 +5,14 @@ import json
 
 import pytest
 from business_fixtures import allow_reply
+from qingda import reply_profiles as rp
+from qingda.providers import Gateway
+from qingda.reply_queue import fit_context
+from qingda.store import Store
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup, verified_fixture
 from test_group_wakeup import GROUP, group_setup, text
 from test_worker import Gateway as SendingGateway
-from wechat_manager import reply_profiles as rp
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_queue import fit_context
-from wechat_manager.store import Store
-from wechat_manager.worker import Worker
 
 
 class ProfilesGateway:
@@ -197,7 +197,7 @@ async def test_inflight_identity_or_permission_change_discards_result(tmp_path, 
             elif change == "takeover":
                 m.takeover(c["id"], conn, NOW + 3)
             else:
-                from wechat_manager.contact_changes import mark_removed
+                from qingda.contact_changes import mark_removed
 
                 event = conn.execute("SELECT * FROM events LIMIT 1").fetchone()
                 mark_removed(conn, m.account(a["id"], conn), "friend", NOW + 3, "friend_removed", row=event)
@@ -265,7 +265,7 @@ async def test_cold_reply_and_snapshot_do_not_wait_for_profiles(tmp_path):
 
 
 def test_capacity_discards_optional_profiles_before_current_content(monkeypatch):
-    monkeypatch.setattr("wechat_manager.reply_queue.TEXT_LIMIT", 100000)
+    monkeypatch.setattr("qingda.reply_queue.TEXT_LIMIT", 100000)
     message = {
         "role": "user",
         "current": True,
@@ -317,7 +317,7 @@ def test_only_real_same_group_reference_queues_author(tmp_path, reference_id, ex
 
 
 async def test_group_brief_refresh_preserves_detail_fields_and_clears_display_name(tmp_path):
-    from wechat_manager.contact_profiles import ContactProfiles
+    from qingda.contact_profiles import ContactProfiles
 
     s, m, a, _ = group_setup(tmp_path)
     with s.transaction() as conn:
@@ -355,7 +355,7 @@ async def test_group_brief_refresh_preserves_detail_fields_and_clears_display_na
     ],
 )
 def test_profile_location_requires_user_message_evidence(body, evidence, allowed):
-    from wechat_manager.reply_tools import ToolFailure
+    from qingda.reply_tools import ToolFailure
 
     context = [
         {
@@ -377,7 +377,7 @@ def test_profile_location_requires_user_message_evidence(body, evidence, allowed
 
 
 def test_old_same_member_location_cannot_authorize_current_weather():
-    from wechat_manager.reply_tools import ToolFailure
+    from qingda.reply_tools import ToolFailure
 
     context = [
         {"role": "user", "sender": "a", "content": "昨天在成都，今天已经离开了", "context_scope": "related"},
@@ -389,9 +389,9 @@ def test_old_same_member_location_cannot_authorize_current_weather():
 
 async def test_weather_profile_guard_runs_before_network(tmp_path):
     import httpx
+    from qingda.reply_tools import ReplyTools
+    from qingda.tool_generation import generate
     from test_reply_tools import Model, call, config, response
-    from wechat_manager.reply_tools import ReplyTools
-    from wechat_manager.tool_generation import generate
 
     requests = []
 

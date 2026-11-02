@@ -3,11 +3,11 @@
 import json
 
 import pytest
+from qingda.service import Manager
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_group_wakeup import GROUP, group_setup, pat, text
 from test_worker import Gateway
-from wechat_manager.service import Manager
-from wechat_manager.worker import Worker
 
 
 def private_pat(s, m, mid=2, **extra):
@@ -374,8 +374,8 @@ async def test_backfilled_image_prepares_actual_media(tmp_path):
     import io
 
     from PIL import Image
-    from wechat_manager.config import Config
-    from wechat_manager.media import IncomingMedia
+    from qingda.config import Config
+    from qingda.media import IncomingMedia
 
     s, m, _, _ = group_setup(tmp_path)
     m.media = IncomingMedia(m, Config(tmp_path, tmp_path / "key"))

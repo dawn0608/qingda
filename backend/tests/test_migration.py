@@ -7,9 +7,9 @@ from urllib.parse import urlsplit, urlunsplit
 
 import psycopg
 import pytest
+from qingda.migration import backup_database, migrate_database, restore_database
+from qingda.store import Store
 from test_database import database_url
-from wechat_manager.migration import backup_database, migrate_database, restore_database
-from wechat_manager.store import Store
 
 
 def test_runtime_rejects_sqlite_and_missing_database():
@@ -123,7 +123,7 @@ def test_postgres_custom_backup_restores_readable_data(tmp_path):
     backup_database(store, dump)
     assert dump.read_bytes().startswith(b"PGDMP")
     base = os.environ["TEST_DATABASE_URL"]
-    name = "wechat_manager_restore_test_" + uuid.uuid4().hex[:12]
+    name = "qingda_restore_test_" + uuid.uuid4().hex[:12]
     with psycopg.connect(base, autocommit=True) as conn:
         conn.execute('CREATE DATABASE "' + name + '"')
     target = urlunsplit(urlsplit(store.url)._replace(path="/" + name))

@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 from dotenv import dotenv_values
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from layout import APP, CONFIG, DATA, ROOT, check_rollback_layout, service_template, unit
+from layout import APP, CONFIG, DATA, ROOT, require_project_identity, service_template, unit
 from proxy import Gateway, backup_state, health_url
 from storage_retention import register, sha, storage_lock
 
@@ -93,7 +93,7 @@ def command(args, env=None, timeout=120):
 
 def pg_url(database, role="migration"):
     values = json.loads((CONFIG / "postgres-credentials.json").read_text())
-    return "postgresql://wechat_manager_" + role + ":" + values[role] + "@127.0.0.1:5432/" + database
+    return "postgresql://qingda_" + role + ":" + values[role] + "@127.0.0.1:5432/" + database
 
 
 def environment(candidate, url):
@@ -113,24 +113,24 @@ def run_python(python, candidate, url, code):
 def grants(url, python, candidate):
     # Root local peer access configures only this project's objects and roles.
     sql = """
-DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='wechat_manager_owner') THEN CREATE ROLE wechat_manager_owner NOLOGIN; END IF; END $$;
-GRANT wechat_manager_owner TO wechat_manager_migration,wechat_manager_admin;
-ALTER DATABASE wechat_manager OWNER TO wechat_manager_owner;
-ALTER SCHEMA public OWNER TO wechat_manager_owner;
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='qingda_owner') THEN CREATE ROLE qingda_owner NOLOGIN; END IF; END $$;
+GRANT qingda_owner TO qingda_migration,qingda_admin;
+ALTER DATABASE qingda OWNER TO qingda_owner;
+ALTER SCHEMA public OWNER TO qingda_owner;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 DO $$ DECLARE r record; BEGIN
-FOR r IN SELECT tablename AS name FROM pg_tables WHERE schemaname='public' LOOP EXECUTE format('ALTER TABLE public.%I OWNER TO wechat_manager_owner',r.name); END LOOP;
-FOR r IN SELECT viewname AS name FROM pg_views WHERE schemaname='public' LOOP EXECUTE format('ALTER VIEW public.%I OWNER TO wechat_manager_owner',r.name); END LOOP;
+FOR r IN SELECT tablename AS name FROM pg_tables WHERE schemaname='public' LOOP EXECUTE format('ALTER TABLE public.%I OWNER TO qingda_owner',r.name); END LOOP;
+FOR r IN SELECT viewname AS name FROM pg_views WHERE schemaname='public' LOOP EXECUTE format('ALTER VIEW public.%I OWNER TO qingda_owner',r.name); END LOOP;
 END $$;
-GRANT CONNECT ON DATABASE wechat_manager TO wechat_manager_app,wechat_manager_admin;
-GRANT USAGE ON SCHEMA public TO wechat_manager_app;
-GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO wechat_manager_app;
-GRANT USAGE,SELECT,UPDATE ON ALL SEQUENCES IN SCHEMA public TO wechat_manager_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE wechat_manager_owner IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO wechat_manager_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE wechat_manager_owner IN SCHEMA public GRANT USAGE,SELECT,UPDATE ON SEQUENCES TO wechat_manager_app;
+GRANT CONNECT ON DATABASE qingda TO qingda_app,qingda_admin;
+GRANT USAGE ON SCHEMA public TO qingda_app;
+GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO qingda_app;
+GRANT USAGE,SELECT,UPDATE ON ALL SEQUENCES IN SCHEMA public TO qingda_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE qingda_owner IN SCHEMA public GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO qingda_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE qingda_owner IN SCHEMA public GRANT USAGE,SELECT,UPDATE ON SEQUENCES TO qingda_app;
 """
     result = subprocess.run(
-        ["runuser", "-u", "postgres", "--", "psql", "-d", "wechat_manager", "-v", "ON_ERROR_STOP=1", "-q"],
+        ["runuser", "-u", "postgres", "--", "psql", "-d", "qingda", "-v", "ON_ERROR_STOP=1", "-q"],
         input=sql,
         text=True,
         capture_output=True,
@@ -140,9 +140,11 @@ ALTER DEFAULT PRIVILEGES FOR ROLE wechat_manager_owner IN SCHEMA public GRANT US
 
 
 def check_sources(spec):
+    require_project_identity(spec)
     if sha(APP / "release.json") != spec["expected_manifest_sha256"]:
         raise RuntimeError("线上发布版本已改变，必须重新冻结")
     old = json.loads((APP / "release.json").read_text())
+    require_project_identity(old)
     for name, digest in old["files"].items():
         p = APP / name
         if p.is_symlink() or not p.is_file() or sha(p) != digest:
@@ -171,6 +173,7 @@ def extract(bundle, expected, folder):
         if len({x.name for x in members}) != len(members):
             raise ValueError("发布包路径重复")
         spec = json.load(archive.extractfile("release.json"))
+        require_project_identity(spec)
         if {x.name for x in members} != set(spec["files"]) | {"release.json"}:
             raise ValueError("发布包清单不符")
         for name, digest in spec["files"].items():
@@ -273,7 +276,7 @@ def wait_buffer_callback(callback, timeout=10):
             with urlopen(callback, timeout=3) as response:
                 if (
                     response.status == 200
-                    and response.headers.get("X-Callback-Receiver") == "wechat-manager-postgres-buffer"
+                    and response.headers.get("X-Callback-Receiver") == "qingda-postgres-buffer"
                 ):
                     return
         except Exception:
@@ -362,7 +365,7 @@ def drain_replies(python, candidate, timeout=300):
             run_python(
                 python,
                 candidate,
-                pg_url("wechat_manager"),
+                pg_url("qingda"),
                 "import os,psycopg; c=psycopg.connect(os.environ['DATABASE_URL']); total=0\nfor (uid,) in c.execute('SELECT id FROM users').fetchall():\n c.execute(\"SELECT set_config('app.user_id',%s,true)\",(str(uid),)); total+=c.execute(\"SELECT count(*) FROM tasks WHERE state IN ('queued','generating','preparing','ready','sending')\").fetchone()[0]\nprint(total); c.close()",
             ).strip()
         )
@@ -378,7 +381,7 @@ def release(
     expected,
     check=False,
     prepared=None,
-    rehearsal_database="wechat_manager_rehearsal",
+    rehearsal_database="qingda_rehearsal",
     rollback_schema=None,
     worker_active=None,
 ):
@@ -386,7 +389,7 @@ def release(
     paused = (CONFIG / "outbound-paused").exists()
     run_worker = not paused and worker_active is not False
     os.umask(63)
-    stage = ROOT / ("chat-release-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()))
+    stage = ROOT / ("qingda-release-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()))
     stage.mkdir(mode=448)
     register(stage, "transient", "preparing")
     OPERATION_LOG = stage / "operations.log"
@@ -412,7 +415,7 @@ def release(
             python,
             candidate,
             pg_url(rehearsal_database),
-            "from wechat_manager.store import Store; s=Store(__import__('os').environ['DATABASE_URL']); assert s.health()['database_ready']; s.close()",
+            "from qingda.store import Store; s=Store(__import__('os').environ['DATABASE_URL']); assert s.health()['database_ready']; s.close()",
         )
         receipt = {
             "revision": spec["revision"],
@@ -447,7 +450,7 @@ def release(
                     "--setenv=PYTHONPATH=" + str(candidate / "backend"),
                     python,
                     "-m",
-                    "wechat_manager.callback_buffer",
+                    "qingda.callback_buffer",
                 ]
             )
             values = dotenv_values(APP / ".env")
@@ -456,7 +459,7 @@ def release(
                     python,
                     candidate,
                     url,
-                    "import os,psycopg; from wechat_manager.security import Vault; from wechat_manager.config import Config; c=psycopg.connect(os.environ['DATABASE_URL']); value=c.execute('SELECT callback_key FROM users ORDER BY id LIMIT 1').fetchone(); print(Vault(Config.from_env().key_file).decrypt(value[0])); c.close()",
+                    "import os,psycopg; from qingda.security import Vault; from qingda.config import Config; c=psycopg.connect(os.environ['DATABASE_URL']); value=c.execute('SELECT callback_key FROM users ORDER BY id LIMIT 1').fetchone(); print(Vault(Config.from_env().key_file).decrypt(value[0])); c.close()",
                 )
                 .decode()
                 .strip()
@@ -484,26 +487,26 @@ def release(
             python,
             candidate,
             url,
-            "from wechat_manager.migration import backup_database;backup_database(__import__('os').environ['DATABASE_URL'],"
-            + repr(str(stage / "manager-before.dump"))
+            "from qingda.migration import backup_database;backup_database(__import__('os').environ['DATABASE_URL'],"
+            + repr(str(stage / "qingda-before.dump"))
             + ")",
         )
         if previous_schema != target_schema:
             register(stage, "protected", "pre_migration", "结构升级前原始数据及配置；禁止旧结构回退")
         if rollback_schema:
-            align_schema(python, candidate, pg_url("wechat_manager"), rollback_schema)
+            align_schema(python, candidate, pg_url("qingda"), rollback_schema)
         run_python(
             python,
             candidate,
-            pg_url("wechat_manager"),
-            "from wechat_manager.migration import migrate_database;migrate_database(__import__('os').environ['DATABASE_URL'])",
+            pg_url("qingda"),
+            "from qingda.migration import migrate_database;migrate_database(__import__('os').environ['DATABASE_URL'])",
         )
         if buffered:
             run_python(
                 python,
                 candidate,
                 url,
-                "from wechat_manager.store import Store;from wechat_manager.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
+                "from qingda.store import Store;from qingda.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
             )
         old_venv = APP / ".venv"
         if old_venv.is_symlink():
@@ -524,6 +527,7 @@ def release(
         (APP / "release.json").write_text(
             json.dumps(
                 {
+                    "project_identity": "qingda",
                     "revision": spec["revision"],
                     "files": spec["files"],
                     "tracked": spec.get("tracked", {}),
@@ -550,7 +554,7 @@ def release(
                 APP / ".venv/bin/python",
                 APP,
                 url,
-                "from wechat_manager.store import Store;from wechat_manager.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);print(replay(s));assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.close()",
+                "from qingda.store import Store;from qingda.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);print(replay(s));assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.close()",
             )
             buffered = False
         if run_worker:
@@ -564,7 +568,7 @@ def release(
                 APP / ".venv/bin/python",
                 APP,
                 url,
-                "from wechat_manager.store import Store;s=Store(__import__('os').environ['DATABASE_URL']);assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.query('DELETE FROM migration_inbox WHERE imported=1 RETURNING id');s.close()",
+                "from qingda.store import Store;s=Store(__import__('os').environ['DATABASE_URL']);assert not s.query('SELECT 1 FROM migration_inbox WHERE imported=0');s.query('DELETE FROM migration_inbox WHERE imported=1 RETURNING id');s.close()",
             )
             (CONFIG / "migration-buffer.env").unlink(missing_ok=True)
         verify_api_auth(
@@ -581,7 +585,7 @@ def release(
             name: sha(stage / name)
             for name in (
                 "source.tar.gz",
-                "manager-before.dump",
+                "qingda-before.dump",
                 "files/.env",
                 "master.key",
                 "nginx.before.conf",
@@ -609,7 +613,7 @@ def release(
                 actual = run_python(
                     python,
                     candidate,
-                    pg_url("wechat_manager"),
+                    pg_url("qingda"),
                     "import os,psycopg; c=psycopg.connect(os.environ['DATABASE_URL']); print(c.execute('SELECT max(version) FROM schema_versions').fetchone()[0]); c.close()",
                 )
                 changed = int(actual.strip()) != previous_schema
@@ -646,7 +650,7 @@ def release(
                         target.write_text(service_template(source))
                         target.chmod(0o644)
                     command(["systemctl", "daemon-reload"])
-                align_schema(APP / ".venv/bin/python", APP, pg_url("wechat_manager"), source_schema(APP))
+                align_schema(APP / ".venv/bin/python", APP, pg_url("qingda"), source_schema(APP))
                 if buffered:
                     command(["systemctl", "start", unit("web")])
                     gateway.put(before)
@@ -655,7 +659,7 @@ def release(
                         APP / ".venv/bin/python",
                         APP,
                         url,
-                        "from wechat_manager.store import Store;from wechat_manager.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
+                        "from qingda.store import Store;from qingda.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
                     )
                     (CONFIG / "migration-buffer.env").unlink(missing_ok=True)
                     buffered = False
@@ -674,7 +678,7 @@ def release(
 
 
 def source_schema(folder):
-    tree = ast.parse((folder / "backend/wechat_manager/store.py").read_text())
+    tree = ast.parse((folder / "backend/qingda/store.py").read_text())
     return next(
         n.value.value
         for n in tree.body
@@ -704,6 +708,7 @@ def rollback_release(backup):
         if sha(backup / name) != digest:
             raise ValueError("回退备份哈希不符")
     current = json.loads((APP / "release.json").read_text())
+    require_project_identity(current)
     if current["revision"] != receipt["revision"]:
         raise ValueError("当前版本已经改变，不能跨发布覆盖")
     stage = ROOT / ("rollback-upload-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()))
@@ -711,7 +716,7 @@ def rollback_release(backup):
     register(stage, "transient", "rollback_preparing")
     with tarfile.open(backup / "source.tar.gz") as archive:
         old = json.load(archive.extractfile("release.json"))
-        check_rollback_layout(old["files"])
+        require_project_identity(old)
         spec = {
             **old,
             "expected_manifest_sha256": sha(APP / "release.json"),
@@ -747,7 +752,7 @@ def main():
     p.add_argument("--rollback", type=pathlib.Path)
     p.add_argument("--check", action="store_true")
     p.add_argument("--prepared", type=pathlib.Path)
-    p.add_argument("--rehearsal-database", default="wechat_manager_rehearsal")
+    p.add_argument("--rehearsal-database", default="qingda_rehearsal")
     args = p.parse_args()
     with storage_lock():
         if args.rollback:

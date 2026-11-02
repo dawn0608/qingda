@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 import pytest
+from qingda.media_references import record_outbound
 from test_automation import NOW, deliver, setup
 from test_database import database_url
-from wechat_manager.media_references import record_outbound
 
 
 @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ def test_two_processes_crash_lease_expiry_and_unknown_send_do_not_replay(tmp_pat
         **os.environ,
         "ACTOR_DATABASE_URL": store.url,
         "ACTOR_CLOCK": str(NOW + 10),
-        "PGAPPNAME": "wechat-manager-isolated-actor",
+        "PGAPPNAME": "qingda-isolated-actor",
     }
     first = subprocess.run(
         [sys.executable, str(actor), "crash"], env=env, capture_output=True, text=True, timeout=30
@@ -111,14 +111,14 @@ def test_two_processes_crash_lease_expiry_and_unknown_send_do_not_replay(tmp_pat
     assert store.query("SELECT * FROM worker_lock") == []
     assert (
         store.query(
-            "SELECT count(*) AS count FROM pg_stat_activity WHERE datname=current_database() AND application_name='wechat-manager-isolated-actor'"
+            "SELECT count(*) AS count FROM pg_stat_activity WHERE datname=current_database() AND application_name='qingda-isolated-actor'"
         )[0]["count"]
         == 0
     )
 
 
 async def test_media_link_is_refreshed_and_failure_preserves_chat(tmp_path):
-    from wechat_manager.providers import Gateway, ProviderError
+    from qingda.providers import Gateway, ProviderError
 
     store, manager, account, conv = setup(tmp_path)
     manager.configure_automation(account["id"], ai_enabled=False)
@@ -163,7 +163,7 @@ async def test_media_link_is_refreshed_and_failure_preserves_chat(tmp_path):
 
 
 def test_repeated_invalid_callback_only_increments_delivery_count(tmp_path):
-    from wechat_manager.store import Store
+    from qingda.store import Store
 
     store = Store(database_url(tmp_path / "postgres"))
     one = store.receive(b"{broken", now=1)
@@ -190,7 +190,7 @@ def test_chat_content_wrapping_and_binary_changes_do_not_create_versions(tmp_pat
 
 
 def test_identical_relationship_callback_after_processing_is_new_evidence(tmp_path):
-    from wechat_manager.store import Store
+    from qingda.store import Store
 
     store = Store(database_url(tmp_path / "postgres"))
     raw = json.dumps(

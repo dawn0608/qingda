@@ -25,8 +25,8 @@ CREATE POLICY user_isolation ON chat_history_deletions
  USING(user_id=NULLIF(current_setting('app.user_id',true),'')::bigint)
  WITH CHECK(user_id=NULLIF(current_setting('app.user_id',true),'')::bigint);
 DO $$ BEGIN
- IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='wechat_manager_app') THEN
-  GRANT SELECT,INSERT,UPDATE,DELETE ON chat_history_deletions TO wechat_manager_app;
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='qingda_app') THEN
+  GRANT SELECT,INSERT,UPDATE,DELETE ON chat_history_deletions TO qingda_app;
  END IF;
 END $$;
 INSERT INTO schema_versions VALUES(59);

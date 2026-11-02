@@ -10,15 +10,15 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
+from qingda import reply_queue
+from qingda.config import Config
+from qingda.media import IncomingMedia
+from qingda.providers import Gateway as RealGateway
+from qingda.providers import ProviderError
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_group_wakeup import GROUP, group_setup, text
 from test_media import MediaGateway
-from wechat_manager import reply_queue
-from wechat_manager.config import Config
-from wechat_manager.media import IncomingMedia
-from wechat_manager.providers import Gateway as RealGateway
-from wechat_manager.providers import ProviderError
-from wechat_manager.worker import Worker
 
 
 def png():
@@ -197,7 +197,7 @@ async def test_source_priority_isolation_and_callback_order(tmp_path, mode):
     else:
         quote(s, m, 101, 100, created=NOW + (150 if mode == "old_quote" else 5))
     if mode == "revoked":
-        from wechat_manager.callbacks import message_key, put
+        from qingda.callbacks import message_key, put
 
         with s.connect() as c:
             put(c, message_key(1), 1, conv["id"], revoked=True, event_id=1)
@@ -229,7 +229,7 @@ async def test_revoke_during_download_discards_result_and_rebuilds(tmp_path):
     original = g.download_media
 
     async def revoke(*args, **kwargs):
-        from wechat_manager.callbacks import message_key, put
+        from qingda.callbacks import message_key, put
 
         with s.connect() as c:
             put(c, message_key(1), 1, conv["id"], revoked=True, event_id=1)
@@ -318,7 +318,7 @@ def test_two_process_image_recovery_and_unknown_send(tmp_path, mode):
         **os.environ,
         "ACTOR_DATABASE_URL": s.url,
         "ACTOR_MEDIA_DIR": str(tmp_path),
-        "PGAPPNAME": "wechat-manager-image-actor",
+        "PGAPPNAME": "qingda-image-actor",
     }
     first = subprocess.Popen(
         [sys.executable, str(actor), "crash_send" if mode == "crash_send" else "hold"],
@@ -342,7 +342,7 @@ def test_two_process_image_recovery_and_unknown_send(tmp_path, mode):
         elif mode in ("crash", "crash_revoke"):
             first.kill()
             if mode == "crash_revoke":
-                from wechat_manager.callbacks import message_key, put
+                from qingda.callbacks import message_key, put
 
                 with s.connect() as c:
                     put(c, message_key(1), 1, conv["id"], revoked=True, event_id=1)
@@ -363,9 +363,9 @@ def test_two_process_image_recovery_and_unknown_send(tmp_path, mode):
         assert not s.query("SELECT * FROM worker_lock")
         assert not s.query("SELECT * FROM incoming_media WHERE state='downloading'")
         assert (
-            s.query(
-                "SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='wechat-manager-image-actor'"
-            )[0]["n"]
+            s.query("SELECT count(*) AS n FROM pg_stat_activity WHERE application_name='qingda-image-actor'")[
+                0
+            ]["n"]
             == 0
         )
         if mode == "crash_send":

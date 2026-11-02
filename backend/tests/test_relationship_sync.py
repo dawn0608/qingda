@@ -6,9 +6,9 @@ import uuid
 import pytest
 from business_fixtures import queue_contact_check
 from contact_fixtures import setup_directory
+from qingda.accounts import AccountService
+from qingda.worker import Worker
 from test_contact_removal import delete_event
-from wechat_manager.accounts import AccountService
-from wechat_manager.worker import Worker
 
 
 def system_event(store, manager, content, msg_type=10000, *, process=True, **changes):

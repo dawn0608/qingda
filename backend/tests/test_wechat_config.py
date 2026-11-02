@@ -2,10 +2,10 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from qingda.providers import ProviderError
+from qingda.security import digest
+from qingda.tenancy import initialize_user
 from test_authentication import code_login, setup, sms_login
-from wechat_manager.providers import ProviderError
-from wechat_manager.security import digest
-from wechat_manager.tenancy import initialize_user
 
 PATH = "/wechat/api/v1/wechat-config"
 

@@ -1,5 +1,5 @@
 import { useState, type ClipboardEvent, type ReactNode } from "react";
-import catalog from "../../backend/wechat_manager/native_emotions.json";
+import catalog from "../../backend/qingda/native_emotions.json";
 import resources from "./assets/native-emotions/manifest.json";
 
 const aliases: Record<string, string> = catalog;

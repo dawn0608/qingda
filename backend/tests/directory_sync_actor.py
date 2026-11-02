@@ -5,11 +5,11 @@ import json
 import os
 import sys
 
-from wechat_manager.contacts import publish_directory
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
-from wechat_manager.worker import Worker
+from qingda.contacts import publish_directory
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
+from qingda.worker import Worker
 
 
 class Directory:

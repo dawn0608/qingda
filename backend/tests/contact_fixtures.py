@@ -1,6 +1,6 @@
 from auth_fixtures import login_response
+from qingda.providers import ProviderError
 from test_http import client
-from wechat_manager.providers import ProviderError
 
 
 class DirectoryGateway:

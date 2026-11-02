@@ -5,12 +5,12 @@ import json
 import os
 import signal
 
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import current_user, user_scope
+from qingda.worker import Worker
 from test_automation import NOW
 from test_worker import Gateway
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user, user_scope
-from wechat_manager.worker import Worker
 
 current_user.set(int(os.environ["ACTOR_USER_ID"]))
 store = Store(os.environ["ACTOR_DATABASE_URL"])

@@ -14,12 +14,12 @@ import wave
 
 import pytest
 from contact_fixtures import setup_directory
+from qingda import history_deletion, history_voice
+from qingda.database_async import database_call
+from qingda.media_access import history_media_access
+from qingda.tenancy import current_user, user_scope
 from test_authentication import code_login
 from test_chat_records import endpoint, incoming
-from wechat_manager import history_deletion, history_voice
-from wechat_manager.database_async import database_call
-from wechat_manager.media_access import history_media_access
-from wechat_manager.tenancy import current_user, user_scope
 
 
 def populate(tmp_path, peer="alice"):
@@ -232,10 +232,10 @@ def test_two_processes_lease_exclusion_crash_and_expired_takeover(tmp_path):
     code = """import os,sys,time,json
 from pathlib import Path
 from types import SimpleNamespace
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
-from wechat_manager.history_deletion import claim,advance,status
-from wechat_manager.media_access import history_media_access
+from qingda.store import Store
+from qingda.tenancy import user_scope
+from qingda.history_deletion import claim,advance,status
+from qingda.media_access import history_media_access
 with user_scope(int(sys.argv[1])):
  m=SimpleNamespace(store=Store(os.environ['CLEAR_TEST_DATABASE_URL']),media=SimpleNamespace(directory=Path(sys.argv[2])))
  if sys.argv[4]=='first':

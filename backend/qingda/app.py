@@ -164,7 +164,7 @@ def create_app(config=None, gateway_factory=None, sms_provider=None, auth_clock=
         if current_user.get() is None:
             return Response(status_code=404)
         if request.method != "POST":
-            return Response(status_code=200, headers={"X-Callback-Receiver": "wechat-manager"})
+            return Response(status_code=200, headers={"X-Callback-Receiver": "qingda"})
         if request.headers.get("transfer-encoding"):
             return Response(status_code=400)
         raw = bytearray()
@@ -177,7 +177,7 @@ def create_app(config=None, gateway_factory=None, sms_provider=None, auth_clock=
                 request.state.event_id = await database_call(store.receive, bytes(raw))
             except (psycopg.Error, PoolTimeout, TooManyRequests, TimeoutError, OSError):
                 return Response(status_code=503)
-        return Response(status_code=200, headers={"X-Callback-Receiver": "wechat-manager"})
+        return Response(status_code=200, headers={"X-Callback-Receiver": "qingda"})
 
     @app.get(PREFIX + "/settings", dependencies=[Depends(auth)])
     async def settings():

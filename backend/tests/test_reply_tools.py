@@ -5,12 +5,12 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+from qingda.reply_tools import ReplyTools as BaseReplyTools
+from qingda.reply_tools import ToolFailure, calculate
+from qingda.tool_generation import Checkpoint, generate
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_worker import Gateway as SendingGateway
-from wechat_manager.reply_tools import ReplyTools as BaseReplyTools
-from wechat_manager.reply_tools import ToolFailure, calculate
-from wechat_manager.tool_generation import Checkpoint, generate
-from wechat_manager.worker import Worker
 
 
 def config():
@@ -245,7 +245,7 @@ async def test_search_sources_and_fixed_request():
 
 
 async def test_http_total_deadline_cancels_slow_connection(monkeypatch):
-    monkeypatch.setattr("wechat_manager.reply_tools.HTTP_TIMEOUT", 0.05)
+    monkeypatch.setattr("qingda.reply_tools.HTTP_TIMEOUT", 0.05)
     canceled = []
 
     async def handler(request):
@@ -420,7 +420,7 @@ async def test_worker_cancels_inflight_query_and_never_sends(tmp_path, mode, mon
 
     gateway.reply_tools.run = slow
     if mode == "timeout":
-        monkeypatch.setattr("wechat_manager.model_settings.TEXT_TIMEOUT", 2.0)
+        monkeypatch.setattr("qingda.model_settings.TEXT_TIMEOUT", 2.0)
     worker = Worker(manager, gateway, clock=lambda: NOW + 5)
     future = asyncio.create_task(worker.once())
     await asyncio.wait_for(started.wait(), 5)

@@ -4,8 +4,8 @@ import json
 
 import pytest
 from business_fixtures import allow_reply
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
-from wechat_manager.worker import Worker
 
 
 class Gateway:

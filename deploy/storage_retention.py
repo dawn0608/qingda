@@ -19,13 +19,13 @@ from layout import APP, LOCK, ROOT
 
 RELEASE_FILES = {
     "source.tar.gz",
-    "manager-before.dump",
+    "qingda-before.dump",
     "files/.env",
     "master.key",
     "nginx.before.conf",
     "attachments.tar.gz",
 }
-DAILY_FILES = {"manager.dump", "master.key", "root-env", "attachments.tar.gz"}
+DAILY_FILES = {"qingda.dump", "master.key", "root-env", "attachments.tar.gz"}
 
 
 def sha(path):
@@ -146,7 +146,7 @@ class Retention:
             if source.is_symlink() or not source.resolve().is_relative_to(path) or sha(source) != digest:
                 raise ValueError("backup_hash_mismatch: " + path.name + "/" + name)
         result = subprocess.run(
-            ["pg_restore", "--list", str(path / ("manager-before.dump" if release else "manager.dump"))],
+            ["pg_restore", "--list", str(path / ("qingda-before.dump" if release else "qingda.dump"))],
             capture_output=True,
         )
         if result.returncode:
@@ -174,7 +174,7 @@ class Retention:
                     {"path": str(path), "reason": "explicit_protection: " + metadata.get("reason", "")}
                 )
             elif (
-                re.fullmatch(r"chat-release-\d{8}-\d{6}", path.name)
+                re.fullmatch(r"qingda-release-\d{8}-\d{6}", path.name)
                 and (path / "receipt.json").exists()
                 and (path / "venv-before").exists()
             ):
@@ -230,12 +230,12 @@ class Retention:
             and not (path / "manifest.json").exists()
         ):
             return True
-        if re.fullmatch(r"chat-release-\d{8}-\d{6}", path.name):
+        if re.fullmatch(r"qingda-release-\d{8}-\d{6}", path.name):
             if any(
                 (path / name).exists()
                 for name in [
                     "source.tar.gz",
-                    "manager-before.dump",
+                    "qingda-before.dump",
                     "venv-before",
                     "master.key",
                     "files/.env",

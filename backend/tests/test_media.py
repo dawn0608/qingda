@@ -6,14 +6,14 @@ import os
 import pytest
 from business_fixtures import allow_reply
 from PIL import Image
+from qingda.config import Config
+from qingda.media import IncomingMedia
+from qingda.media_decode import decode
+from qingda.providers import ProviderError
+from qingda.security import create_key
+from qingda.worker import Worker
 from test_automation import NOW, deliver, setup
 from test_worker import Gateway
-from wechat_manager.config import Config
-from wechat_manager.media import IncomingMedia
-from wechat_manager.media_decode import decode
-from wechat_manager.providers import ProviderError
-from wechat_manager.security import create_key
-from wechat_manager.worker import Worker
 
 
 def config_at(tmp_path):
@@ -23,7 +23,7 @@ def config_at(tmp_path):
 
 @pytest.mark.parametrize("mode,pixel", [("RGB", (12, 65, 199)), ("RGBA", (12, 65, 199, 27))])
 def test_frame_cache_preserves_exact_pixels_and_transparency(tmp_path, mode, pixel):
-    from wechat_manager.media_decode import save_frame
+    from qingda.media_decode import save_frame
 
     source = Image.new(mode, (273, 149), pixel)
     source.putpixel((42, 56), tuple(255 - v for v in pixel))
@@ -70,7 +70,7 @@ async def test_animated_image_decode_is_rejected_without_frame_output(tmp_path):
 
 
 def test_original_frame_resolution_is_preserved_or_explicitly_rejected(tmp_path):
-    from wechat_manager.media_decode import save_frame
+    from qingda.media_decode import save_frame
 
     frame = save_frame(Image.new("RGB", (1024, 768), "red"), tmp_path, 1, 0)
     assert (frame["width"], frame["height"]) == (1024, 768)
@@ -103,8 +103,8 @@ async def test_unwoken_group_does_not_download_or_call_models(tmp_path):
 
 
 def test_existing_media_results_preserved_by_current_migration_check(tmp_path):
-    from wechat_manager.migration import migrate_database
-    from wechat_manager.store import SCHEMA_VERSION
+    from qingda.migration import migrate_database
+    from qingda.store import SCHEMA_VERSION
 
     store, manager, _, _ = setup(tmp_path)
     deliver(store, manager, 1)

@@ -1,33 +1,27 @@
-"""唯一线上运维命名；旧布局仅供显式迁移与恢复，不按文件存在情况回退。"""
+"""青答唯一运行布局；已退役的布局参数不可启用。"""
 
 import os
 from pathlib import Path
 
-PROFILE = os.environ.get("QINGDA_DEPLOY_LAYOUT", "qingda")
-if PROFILE not in {"qingda", "legacy"}:
-    raise ValueError("unknown_deployment_layout")
-NAME = "wechat-manager" if PROFILE == "legacy" else "qingda"
-APP = Path("/opt") / NAME
-CONFIG = Path("/etc") / NAME
-DATA = Path("/var/lib") / NAME
-ROOT = Path("/var/backups") / NAME
-ACME = Path("/var/lib") / (NAME + "-acme")
-CERTBOT = Path("/opt") / (NAME + "-acme/bin/certbot")
-LOCK = Path("/run/lock") / (NAME + "-release.lock")
+if os.environ.get("QINGDA_DEPLOY_LAYOUT") not in {None, "qingda"}:
+    raise ValueError("retired_deployment_layout")
+APP = Path("/opt/qingda")
+CONFIG = Path("/etc/qingda")
+DATA = Path("/var/lib/qingda")
+ROOT = Path("/var/backups/qingda")
+ACME = Path("/var/lib/qingda-acme")
+CERTBOT = Path("/opt/qingda-acme/bin/certbot")
+LOCK = Path("/run/lock/qingda-release.lock")
 
 
 def unit(suffix):
-    return NAME + "-" + suffix
+    return "qingda-" + suffix
 
 
 def service_template(source):
-    """源文件始终使用新名；引导发布只转换安装到 systemd 的运维引用。"""
-    text = Path(source).read_text().replace("qingda", NAME)
-    if PROFILE == "legacy":
-        text = text.replace("[Service]\n", "[Service]\nEnvironment=QINGDA_DEPLOY_LAYOUT=legacy\n")
-    return text
+    return Path(source).read_text()
 
 
-def check_rollback_layout(files):
-    if PROFILE != "legacy" and "deploy/wechat-manager-web.service" in files:
-        raise ValueError("legacy_backup_requires_layout_recovery")
+def require_project_identity(manifest):
+    if manifest.get("project_identity") != "qingda":
+        raise ValueError("project_identity_mismatch")

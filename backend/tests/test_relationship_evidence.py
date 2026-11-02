@@ -3,8 +3,8 @@
 import pytest
 from business_fixtures import allow_reply
 from contact_fixtures import setup_directory
-from wechat_manager.accounts import AccountService
-from wechat_manager.worker import Worker
+from qingda.accounts import AccountService
+from qingda.worker import Worker
 
 
 async def test_recent_full_contacts_proof_prevents_initial_pending_and_duplicate_pull(tmp_path):

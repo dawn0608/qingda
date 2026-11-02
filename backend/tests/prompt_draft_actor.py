@@ -4,10 +4,10 @@ import json
 import os
 import sys
 
-from wechat_manager import automation_defaults, prompt_drafts
-from wechat_manager.service import Manager
-from wechat_manager.store import Store
-from wechat_manager.tenancy import user_scope
+from qingda import automation_defaults, prompt_drafts
+from qingda.service import Manager
+from qingda.store import Store
+from qingda.tenancy import user_scope
 
 with user_scope(int(os.environ["DRAFT_ACTOR_USER"])):
     store = Store(os.environ["DRAFT_ACTOR_DATABASE"])

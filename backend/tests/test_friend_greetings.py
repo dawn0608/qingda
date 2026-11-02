@@ -1,6 +1,6 @@
 import pytest
+from qingda.protocol import normalize
 from test_inbox import event
-from wechat_manager.protocol import normalize
 
 
 def greeting(**values):

@@ -37,7 +37,7 @@ ALTER TABLE reply_decisions ADD CONSTRAINT reply_decisions_action_check
     CHECK(action IN ('reply','silent','wait'));
 INSERT INTO schema_versions VALUES(54);
 DO $$ BEGIN
- IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='wechat_manager_app') THEN
-  GRANT SELECT,INSERT,UPDATE,DELETE ON reply_input_waits TO wechat_manager_app;
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='qingda_app') THEN
+  GRANT SELECT,INSERT,UPDATE,DELETE ON reply_input_waits TO qingda_app;
  END IF;
 END $$;

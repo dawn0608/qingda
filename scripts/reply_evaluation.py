@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 import psycopg
-from wechat_manager.context_budget import tokens
-from wechat_manager.tenancy import current_user
+from qingda.context_budget import tokens
+from qingda.tenancy import current_user
 
 
 def account_prompt(database, account_id, prompt_file=None):
@@ -27,11 +27,11 @@ def account_prompt(database, account_id, prompt_file=None):
 
 
 def prompt_metrics(prompt, finish_tool, *, history_enabled=False):
-    from wechat_manager.reply_tools import TOOLS
+    from qingda.reply_tools import TOOLS
 
     available = [*TOOLS, finish_tool]
     if history_enabled:
-        from wechat_manager.history_tool import TOOL as HISTORY_TOOL
+        from qingda.history_tool import TOOL as HISTORY_TOOL
 
         available.append(HISTORY_TOOL)
     return {

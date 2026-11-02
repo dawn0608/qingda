@@ -4,10 +4,10 @@ import json
 
 import httpx
 import pytest
+from qingda.reply_profiles import check_weather_location
+from qingda.reply_tools import ToolFailure
+from qingda.tool_generation import generate
 from test_reply_tools import Model, ReplyTools, call, config, response
-from wechat_manager.reply_profiles import check_weather_location
-from wechat_manager.reply_tools import ToolFailure
-from wechat_manager.tool_generation import generate
 
 
 def context(body="重庆今天天气怎么样", **changes):

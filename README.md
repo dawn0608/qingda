@@ -40,17 +40,17 @@ Windows PowerShell 将复制命令替换为 `Copy-Item .env.example .env`。唯�
 
 ```sh
 # 在 .env 中暂时配置迁移身份的 DATABASE_URL 后执行：
-uv run python -m wechat_manager migrate-db
+uv run python -m qingda migrate-db
 
 # 将 .env 的 DATABASE_URL 改回业务身份后构建并启动：
 npm --prefix frontend run build
-uv run python -m wechat_manager serve
+uv run python -m qingda serve
 ```
 
 另开一个位于项目根目录的终端启动 Worker：
 
 ```sh
-uv run python -m wechat_manager worker
+uv run python -m qingda worker
 ```
 
 默认管理台地址为 <http://127.0.0.1:17950/wechat/>。在系统设置中配置微信 Token 及各供应商密钥。接收真实微信回调需要接入平台能够访问的 HTTPS 根地址、相应反向代理和正确的 `PUBLIC_URL`；回环地址用于本机开发，不能接收公网回调。
@@ -70,7 +70,7 @@ GitHub CI 的绿色状态仅表示上述检查通过。完整后端回归仍使�
 
 ## 部署与维护
 
-线上运维统一使用 `/opt/qingda`、`qingda-*` 服务及 `qingda` 系统账号；Python 模块、软件包、`wechat_manager` 数据库与角色名保持兼容。部署前按自己的环境配置路径、域名、证书及供应商服务，示例地址不代表公共演示站点。
+线上运维统一使用 `/opt/qingda`、`qingda-*` 服务及 `qingda` 系统账号；Python 模块、软件包、数据库和角色也统一为 `qingda`，不提供旧名运行兼容。部署前按自己的环境配置路径、域名、证书及供应商服务，示例地址不代表公共演示站点。
 
 本项目已确认任务默认连续完成必要检查、提交推送、CI 检查、既有生产环境部署及真实数据验收；同一范围无需重复确认部署。此约定由任务执行者落实，不表示 GitHub 已配置自动发布任务。部署后分别核对 API、Worker 和前端版本与哈希，业务验收默认只读，需要测试微信消息时由用户触发。配置及操作见[部署与恢复](docs/operations.md)、[域名与 HTTPS](docs/domain-https.md)和[备份保留](docs/storage-retention.md)。
 
@@ -86,4 +86,4 @@ GitHub CI 的绿色状态仅表示上述检查通过。完整后端回归仍使�
 
 本项目自有代码采用 [MIT 许可证](LICENSE)，版权署名为 `2026 dawn0608`。随仓库提供的第三方字体、微信表情、分词资源及来源资料保留各自的权利和条款，详见[第三方声明](THIRD_PARTY_NOTICES.md)；项目 MIT 许可不替代这些资源的原始许可。
 
-本开源版本于 2026-11-01 从 [Gitee wechat-manager](https://gitee.com/dawn0608/wechat-manager) 的 `master` 分支提交 `83eb0971b94c6ce59f20c830957c04fc4c4c2d2e` 整理而来，使用独立的 `main` 历史。公开快照已替换环境专属地址，并脱敏部分历史验收资料；原 Gitee 仓库及其提交历史保留，不自动双向同步。Python 模块名继续使用 `wechat_manager`。
+本开源版本于 2026-11-01 从 [Gitee wechat-manager](https://gitee.com/dawn0608/wechat-manager) 的 `master` 分支提交 `83eb0971b94c6ce59f20c830957c04fc4c4c2d2e` 整理而来，使用独立的 `main` 历史。公开快照已替换环境专属地址，并脱敏部分历史验收资料；原 Gitee 仓库及其提交历史保留，不自动双向同步。源项目名称仅作为历史出处保留；当前模块名为 `qingda`。

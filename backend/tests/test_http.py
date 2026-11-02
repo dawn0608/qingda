@@ -3,11 +3,11 @@ import json
 from auth_fixtures import login_response
 from business_fixtures import allow_reply
 from fastapi.testclient import TestClient
+from qingda.app import create_app
+from qingda.config import Config
+from qingda.security import create_key
+from qingda.store import Store
 from test_database import database_url
-from wechat_manager.app import create_app
-from wechat_manager.config import Config
-from wechat_manager.security import create_key
-from wechat_manager.store import Store
 
 
 def client(tmp_path, gateway_factory=None, **config_values):
@@ -147,8 +147,8 @@ def test_storage_failure_does_not_acknowledge_callback(tmp_path, monkeypatch):
 
 
 def test_key_previews_follow_authenticated_user_and_never_replace_keys(tmp_path):
+    from qingda.tenancy import user_scope
     from test_authentication import code_login
-    from wechat_manager.tenancy import user_scope
 
     c, store = client(tmp_path)
     vault = c.app.state.manager.vault

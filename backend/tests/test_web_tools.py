@@ -13,17 +13,17 @@ from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 import httpx
 import psycopg
 import pytest
+from qingda.providers import Gateway
+from qingda.reply_tools import ReplyTools as RealTools
+from qingda.reply_tools import ToolFailure
+from qingda.security import Vault, create_key
+from qingda.store import Store
+from qingda.tenancy import current_user, user_scope
+from qingda.tool_generation import Checkpoint, generate
+from qingda.web_tools import WebRateLimiter, check_fetch_scope, public_url, resolve_public_url
 from test_automation import deliver, setup
 from test_database import database_url
 from test_reply_tools import Model, NoWaitLimiter, ReplyTools, call, config, response
-from wechat_manager.providers import Gateway
-from wechat_manager.reply_tools import ReplyTools as RealTools
-from wechat_manager.reply_tools import ToolFailure
-from wechat_manager.security import Vault, create_key
-from wechat_manager.store import Store
-from wechat_manager.tenancy import current_user, user_scope
-from wechat_manager.tool_generation import Checkpoint, generate
-from wechat_manager.web_tools import WebRateLimiter, check_fetch_scope, public_url, resolve_public_url
 
 
 @pytest.mark.parametrize(
