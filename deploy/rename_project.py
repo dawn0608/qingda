@@ -21,6 +21,17 @@ def fingerprint(path):
     return [value.st_dev, value.st_ino]
 
 
+def durable_move(source, target):
+    source, target = Path(source), Path(target)
+    source.rename(target)
+    for parent in {source.parent, target.parent}:
+        fd = os.open(parent, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+
+
 class MoveJournal:
     """先持久化 inode 身份，再 rename；崩溃后按身份判定已完成的方向。"""
 
@@ -53,13 +64,7 @@ class MoveJournal:
             if len(present) != 1 or fingerprint(present[0]) != row["identity"]:
                 raise ValueError("path_identity_changed")
             if present[0] == source:
-                source.rename(target)
-                for parent in {source.parent, target.parent}:
-                    fd = os.open(parent, os.O_RDONLY)
-                    try:
-                        os.fsync(fd)
-                    finally:
-                        os.close(fd)
+                durable_move(source, target)
             state["direction"] = "backward" if reverse else "forward"
             save_json(self.path, state)
 
@@ -101,8 +106,8 @@ def restore_runtime_entries(saved, target, identities, failed):
             if fingerprint(source) != identity:
                 raise ValueError("runtime_identity_changed")
             if destination.exists() or destination.is_symlink():
-                destination.rename(failed / (name + "." + str(time.time_ns())))
-            source.rename(destination)
+                durable_move(destination, failed / (name + "." + str(time.time_ns())))
+            durable_move(source, destination)
         elif not (destination.exists() or destination.is_symlink()) or fingerprint(destination) != identity:
             raise ValueError("runtime_original_missing")
 

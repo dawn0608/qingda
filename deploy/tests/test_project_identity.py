@@ -330,3 +330,34 @@ def test_buffer_intent_is_persistent_before_receiver_start(tmp_path, monkeypatch
     monkeypatch.setattr(operation, "run", fail_start)
     with pytest.raises(RuntimeError, match="injected_start_interruption"):
         operation.start_buffer()
+
+
+def test_migration_pip_ignores_unsafe_host_configuration(tmp_path, monkeypatch):
+    import rename_runtime as runtime
+
+    operation = runtime.Migration(tmp_path)
+    monkeypatch.setenv("PIP_INDEX_URL", "http://untrusted.invalid/simple")
+    monkeypatch.setenv("PIP_TRUSTED_HOST", "untrusted.invalid")
+    monkeypatch.setenv("PIP_EXTRA_INDEX_URL", "http://other.invalid/simple")
+    seen = {}
+
+    def run(args, *, env):
+        seen.update(env)
+        return b""
+
+    monkeypatch.setattr(operation, "run", run)
+    operation.pip(sys.executable, "download", "example")
+    assert seen.get("PIP_CONFIG_FILE") == os.devnull
+    assert seen.get("PIP_INDEX_URL") == "https://pypi.org/simple"
+    assert "PIP_TRUSTED_HOST" not in seen and "PIP_EXTRA_INDEX_URL" not in seen
+
+
+def test_runtime_base_interpreter_is_outside_relocated_environment(tmp_path):
+    import rename_runtime as runtime
+
+    operation = runtime.Migration(tmp_path)
+    assert hasattr(operation, "stable_python"), "重建不能依赖即将移动的虚拟环境解释器"
+    python = Path(operation.stable_python(sys.executable))
+    assert python.is_file() and not python.is_relative_to(Path(sys.prefix))
+    result = subprocess.check_output([python, "-c", "import sys;print(sys.version_info[:3])"], text=True)
+    assert result.strip() == str(sys.version_info[:3])

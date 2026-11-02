@@ -10,11 +10,19 @@ def write(path, data, mode=0o600):
     path = Path(path)
     previous = path.stat() if path.exists() else None
     tmp = path.with_name(path.name + ".ops-tmp")
-    tmp.write_bytes(data if isinstance(data, bytes) else data.encode())
+    with tmp.open("wb") as stream:
+        stream.write(data if isinstance(data, bytes) else data.encode())
+        stream.flush()
+        os.fsync(stream.fileno())
     tmp.chmod(previous.st_mode & 0o777 if previous else mode)
     if previous:
         os.chown(tmp, previous.st_uid, previous.st_gid)
     os.replace(tmp, path)
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 def environment(values):

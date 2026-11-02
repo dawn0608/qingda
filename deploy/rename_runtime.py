@@ -7,8 +7,10 @@ import pwd
 import shutil
 import subprocess
 import time
+from email.parser import BytesParser
 from pathlib import Path
 from urllib.request import urlopen
+from zipfile import ZipFile
 
 import update
 from dotenv import dotenv_values
@@ -17,6 +19,7 @@ from proxy import Gateway
 from rename_project import (
     PATHS,
     MoveJournal,
+    durable_move,
     fingerprint,
     migration_locks,
     replace_symlink,
@@ -142,14 +145,29 @@ class Migration:
         )
 
     def pip(self, python, *args):
+        # 迁移下载固定走官方 HTTPS，不继承主机 HTTP 镜像或 trusted-host 降级。
+        environment = {k: v for k, v in os.environ.items() if not k.startswith("PIP_")}
         return self.run(
             [python, "-m", "pip", *args],
             env={
-                **os.environ,
+                **environment,
+                "PIP_CONFIG_FILE": os.devnull,
+                "PIP_INDEX_URL": "https://pypi.org/simple",
                 "PYTHONPATH": str(self.folder / "pip.whl"),
                 "PIP_DISABLE_PIP_VERSION_CHECK": "1",
             },
         )
+
+    def stable_python(self, python):
+        probe = "import json,sys;print(json.dumps({'prefix':sys.base_prefix,'version':list(sys.version_info[:3])}))"
+        info = json.loads(self.run([python, "-c", probe]))
+        version = info["version"]
+        base = (Path(info["prefix"]) / "bin" / f"python{version[0]}.{version[1]}").resolve()
+        if not base.is_file() or any(base.is_relative_to(p) for pair in PATHS for p in pair):
+            raise ValueError("stable_base_interpreter_required")
+        if json.loads(self.run([base, "-c", probe]))["version"] != version:
+            raise ValueError("base_interpreter_version_mismatch")
+        return str(base)
 
     def prepare_dependencies(self):
         shutil.copy2(OLD / "deploy/pip.whl", self.folder / "pip.whl")
@@ -160,17 +178,9 @@ class Migration:
             "".join(f"{p['name']}=={p['version']}\n" for p in packages)
         )
         for kind, python in (("app", OLD / ".venv/bin/python"), ("cert", cert_python)):
-            base = self.run([python, "-c", "import sys;print(sys._base_executable)"]).decode().strip()
+            base = self.stable_python(python)
             self.state[kind + "_base"] = base
-            self.pip(
-                python,
-                "download",
-                "--dest",
-                self.folder / (kind + "-wheels"),
-                "-r",
-                self.folder / (kind + "-requirements.txt"),
-                *(["--require-hashes"] if kind == "app" else []),
-            )
+            self.prepare_wheels(python, kind)
         self.build_runtime(self.folder / "buffer-venv", "app")
         shutil.copytree(
             OLD / "backend", self.folder / "backend", ignore=shutil.ignore_patterns("__pycache__", "tests")
@@ -179,18 +189,48 @@ class Migration:
         self.phase("dependencies_ready")
         sync_tree(self.folder)
 
+    def prepare_wheels(self, python, kind):
+        wheels = self.folder / (kind + "-wheels")
+        self.pip(
+            python,
+            "wheel",
+            "--no-deps",
+            "--wheel-dir",
+            wheels,
+            "-r",
+            self.folder / (kind + "-requirements.txt"),
+            *(["--require-hashes"] if kind == "app" else []),
+        )
+        # 锁定原始源码的校验仍由 pip wheel 执行；离线阶段固定本次实际生成的 wheel。
+        requirements = []
+        names = set()
+        for path in sorted(wheels.glob("*.whl")):
+            with ZipFile(path) as archive:
+                name = next(n for n in archive.namelist() if n.endswith(".dist-info/METADATA"))
+                metadata = BytesParser().parsebytes(archive.read(name))
+            name, version = metadata["Name"], metadata["Version"]
+            if not name or not version or name.lower().replace("_", "-") in names:
+                raise ValueError("ambiguous_offline_wheel")
+            names.add(name.lower().replace("_", "-"))
+            requirements.append(f"{name}=={version} --hash=sha256:{sha(path)}\n")
+        if not requirements:
+            raise ValueError("empty_offline_wheelhouse")
+        write(self.folder / (kind + "-offline.txt"), "".join(requirements))
+
     def build_runtime(self, path, kind):
         self.run([self.state[kind + "_base"], "-m", "venv", "--copies", "--without-pip", path])
         self.pip(
             Path(path) / "bin/python",
             "install",
             "--no-index",
+            "--no-deps",
+            "--require-hashes",
             "--find-links",
             self.folder / (kind + "-wheels"),
             "-r",
-            self.folder / (kind + "-requirements.txt"),
-            *(["--require-hashes"] if kind == "app" else []),
+            self.folder / (kind + "-offline.txt"),
         )
+        self.pip(Path(path) / "bin/python", "check")
 
     def start_buffer(self):
         # 意图必须先于启动接收器/切换网关落盘；公网探针失败也要走完整恢复和回放。
@@ -318,14 +358,14 @@ class Migration:
         for p in renewal.glob("*.conf"):
             write(p, p.read_text().replace("/var/lib/wechat-manager-acme", "/var/lib/qingda-acme"))
         # 原环境保留到验收；最终路径全新安装，避免旧 shebang 和解释器引用。
-        (NEW / ".venv").rename(self.folder / "app-venv-before")
+        durable_move(NEW / ".venv", self.folder / "app-venv-before")
         self.build_runtime(NEW / ".venv", "app")
         cert = Path("/opt/qingda-acme")
         before = self.folder / "cert-runtime-before"
         before.mkdir()
         self.phase("building_cert_runtime", cert_entries={p.name: fingerprint(p) for p in cert.iterdir()})
         for p in list(cert.iterdir()):
-            p.rename(before / p.name)
+            durable_move(p, before / p.name)
         self.build_runtime(cert, "cert")
         for path in (NEW / ".venv", cert):
             for p in [path, *path.rglob("*")]:
@@ -436,8 +476,8 @@ class Migration:
         for saved, target in ((self.folder / "app-venv-before", OLD / ".venv"),):
             if saved.exists():
                 if target.exists():
-                    target.rename(self.folder / ("failed-runtime-" + str(time.time_ns())))
-                saved.rename(target)
+                    durable_move(target, self.folder / ("failed-runtime-" + str(time.time_ns())))
+                durable_move(saved, target)
         cert_saved = self.folder / "cert-runtime-before"
         if cert_saved.exists():
             cert = Path("/opt/wechat-manager-acme")
