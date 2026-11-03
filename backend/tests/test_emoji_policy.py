@@ -225,7 +225,7 @@ async def test_recent_custom_and_quoted_custom_never_become_media_dependencies(t
         peer=peer,
         created=NOW + 2,
         source="<msgsource><atuserlist>wxid_me</atuserlist></msgsource>",
-        Content={"string": "member:\n@WeMind 说明图片"},
+        Content={"string": "member:\n@WeMind 请说明我刚发的这张图片"},
     )
     try:
         await worker.once()
