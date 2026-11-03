@@ -6,6 +6,11 @@ Desktop.ini
 *.swo
 *~
 .idea/
+*.iml
+*.ipr
+*.iws
+*___jb_tmp___
+*___jb_old___
 .vscode/
 .history/
 .superpowers/
