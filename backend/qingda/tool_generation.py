@@ -44,8 +44,9 @@ def history_state(messages, trace, transform, tool_name=None):
 
 
 class Checkpoint:
-    def __init__(self, store, task_id, fingerprint):
+    def __init__(self, store, task_id, fingerprint, capture=None):
         self.store, self.task_id, self.fingerprint = store, task_id, fingerprint
+        self.capture = capture
 
     def load(self):
         with self.store.connect() as conn:
@@ -55,9 +56,13 @@ class Checkpoint:
             ).fetchone()
         if not row:
             return [], {}, [], 0
+        usage = json.loads(row["usage_json"])
+        captured = usage.pop("_context_capture", None)
+        if self.capture:
+            self.capture.restore(captured)
         return (
             json.loads(row["messages_json"]),
-            json.loads(row["usage_json"]),
+            usage,
             json.loads(row["trace_json"]),
             row["rounds"],
         )
@@ -70,7 +75,9 @@ class Checkpoint:
                     self.task_id,
                     self.fingerprint,
                     json.dumps(messages, ensure_ascii=False),
-                    json.dumps(usage),
+                    json.dumps(
+                        {**usage, **({"_context_capture": self.capture.manifest()} if self.capture else {})}
+                    ),
                     json.dumps(trace, ensure_ascii=False),
                     rounds,
                     time.time(),
@@ -130,6 +137,13 @@ async def generate(
     from .model_settings import effective_model
 
     config = {**config, **{key: effective_model()[key] for key in ("thinking_enabled", "web_search_enabled")}}
+    if execution and hasattr(gateway, "context_writer"):
+        from .context_capture import Writer
+
+        if gateway.context_writer is None:
+            gateway.context_writer = Writer(gateway.manager.store)
+        # 恢复时可能先执行已有工具，甚至直接结束，不能等下一次模型请求才绑定写者。
+        execution.capture.writer = gateway.context_writer
     messages, usage, trace, rounds = (await database_call(checkpoint.load)) if checkpoint else ([], {}, [], 0)
     from .context_snapshot import pack
     from .history_tool import NAME as HISTORY_NAME
@@ -198,6 +212,9 @@ async def generate(
 
     async def save():
         await check()
+        if execution:
+            for item in trace:
+                execution.capture.tool(item)
         saved_messages, saved_trace = await database_call(history_state, messages, trace, pack)
         if checkpoint:
             await database_call(checkpoint.save, saved_messages, usage, saved_trace, rounds)

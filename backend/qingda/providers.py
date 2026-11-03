@@ -44,6 +44,7 @@ class Gateway:
             limits=httpx.Limits(max_connections=8, max_keepalive_connections=4),
         )
         self.reply_tools = None
+        self.context_writer = None
         if tool_config is not None:
             from .reply_tools import ReplyTools
 
@@ -551,6 +552,7 @@ class Gateway:
             raise ProviderError("model_key_validation_failed") from error
 
     async def chat(self, config, messages, tools=None):
+        from .context_capture import CURRENT, Writer
         from .model_settings import effective_model
         from .reply_execution import AUDIT
 
@@ -592,6 +594,11 @@ class Gateway:
         if len(json.dumps(payload, ensure_ascii=False).encode()) >= 48 * 1024 * 1024:
             raise ProviderError("model_input_too_large")
         started, observed, status = time.monotonic(), {}, None
+        capture, capture_id = CURRENT.get(), None
+        if capture is not None:
+            if self.context_writer is None:
+                self.context_writer = Writer(self.manager.store)
+            capture_id = capture.request(payload, size, self.context_writer)
         try:
             response = await self.client.post(
                 config["base_url"].rstrip("/") + "/chat/completions",
@@ -616,6 +623,8 @@ class Gateway:
         except (httpx.RequestError, ValueError) as e:
             raise ProviderError("model_request_failed") from e
         finally:
+            if capture is not None and capture_id:
+                capture.response(capture_id, observed, status, int((time.monotonic() - started) * 1000))
             if audit := AUDIT.get():
                 await audit(
                     {
@@ -634,6 +643,11 @@ class Gateway:
                 )
 
     async def close(self):
+        if self.context_writer is not None:
+            try:
+                await asyncio.wait_for(self.context_writer.drain(), 2)
+            except asyncio.TimeoutError:
+                pass
         if self.reply_tools is not None:
             await self.reply_tools.close()
         await self.client.aclose()

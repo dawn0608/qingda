@@ -9,6 +9,7 @@
 - `conversation_options`、`contact_profiles`和关系核实模块提供当前账号的身份及关系证据。
 - `private_replies`、`dialogue_windows`、`reply_queue`组织收集、输入修订、成员范围、任务及发送间隔。
 - `conversation_history`、`history_tool`和`reply_decisions`维护真实问答、原文回查及严格输出决策；处理消息关联统一保存在`tasks.handled_message_ids`。
+- `context_capture` 在实际模型请求边界旁路记录业务输入及生成过程，`reply_context` 提供逐用户、逐会话的只读查看；恢复清单与观察快照各自保持原用途，记录缺失不影响正常回复。
 - `incoming_media` 保存授权静态图片像素和语音转写；阿里百炼短语音 HTTP 适配器只承担 ASR，密钥和业务来源均按用户隔离，固定的 DeepSeek Flash 原生处理文本和图片并生成回复。
 
 ## 状态与隔离

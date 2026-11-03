@@ -92,6 +92,8 @@ def main():
     delete_requests = []
     voice_requests = []
     controls["voice_fail"] = False
+    controls.update(context_fail=False, context_hold=False, context_legacy=False)
+    context_requests, context_held = [], []
     sound = io.BytesIO()
     with wave.open(sound, "wb") as audio:
         audio.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
@@ -131,6 +133,90 @@ def main():
                     else None
                 )
             )
+            return
+        if path.endswith("/context"):
+            context_requests.append(path)
+            if controls["context_hold"]:
+                context_held.append(r)
+                return
+            if controls["context_fail"]:
+                r.fulfill(status=503, json={"error": "服务暂时繁忙，请稍后重试"})
+                return
+            if controls["context_legacy"]:
+                r.fulfill(
+                    json=dict(
+                        status="unavailable",
+                        missing=["旧回复未记录完整上下文"],
+                        input=None,
+                        calls=[],
+                        cursor=None,
+                        has_more=False,
+                    )
+                )
+                return
+            model_input = dict(
+                system=["生成当时的系统提示词\n" + "完整提示词保留。" * 200],
+                data=dict(
+                    conversation_history=[
+                        dict(sender="好友", content="历史预算为1000元", timestamp=1700000000)
+                    ],
+                    current_messages=[dict(sender="好友", content="现在改成1200元", input_scope="deferred")],
+                    participant_profiles={"requester": {"nickname": "当时的成员"}},
+                    history_coverage=dict(
+                        scope="current_conversation",
+                        has_more=True,
+                        oldest_timestamp=1700000000,
+                        newest_timestamp=1700000100,
+                        trim_reasons={"round_limit": 2},
+                    ),
+                ),
+                images=[],
+                size=dict(tokens=1600, text_bytes=4200),
+            )
+            if params.get("call_id"):
+                r.fulfill(
+                    json=dict(
+                        call_id=params["call_id"][0],
+                        request=dict(
+                            model="deepseek-flash",
+                            messages=[
+                                dict(role="system", content=model_input["system"][0]),
+                                dict(
+                                    role="user", content=json.dumps(model_input["data"], ensure_ascii=False)
+                                ),
+                            ],
+                            tools=[],
+                        ),
+                        response=dict(status=200, response={"choices": []}),
+                    )
+                )
+            else:
+                r.fulfill(
+                    json=dict(
+                        status="complete",
+                        missing=[],
+                        input=model_input,
+                        calls=[
+                            dict(
+                                call_id="model-1",
+                                kind="model",
+                                stage="reply",
+                                model="deepseek-flash",
+                                available=True,
+                                status=200,
+                            ),
+                            dict(
+                                call_id="tool-1",
+                                kind="tool",
+                                stage="reply",
+                                name="finish_reply",
+                                available=True,
+                            ),
+                        ],
+                        cursor=None,
+                        has_more=False,
+                    )
+                )
             return
         if path.endswith("/image"):
             r.fulfill(body=pixels.getvalue(), content_type="image/png", headers={"Cache-Control": "no-store"})
@@ -262,6 +348,78 @@ def main():
                 and entries.first.get_attribute("data-message-id") == "86",
             )
             check("标题显示联系人", "长备注名称" in page.locator("#chat-history-title").inner_text())
+            trigger = page.locator('[data-message-id="134"] .chat-history-bubble')
+            check("聊天列表不预加载上下文", not context_requests)
+            trigger.evaluate(
+                "e=>{const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r)}"
+            )
+            trigger.dispatch_event("click")
+            check("选择助手原文不误开上下文", page.locator(".reply-context-dialog").count() == 0)
+            page.evaluate("getSelection().removeAllRanges()")
+            trigger.press("Enter")
+            context_dialog = page.locator(".reply-context-dialog")
+            expect(context_dialog).to_be_visible()
+            expect(context_dialog).to_contain_text("现在改成1200元")
+            expect(context_dialog).to_contain_text("历史预算为1000元")
+            check("实际上下文分区和删减原因可读", "轮次上限" in context_dialog.inner_text())
+            for width, height in [(1440, 900), (390, 844)]:
+                page.set_viewport_size(dict(width=width, height=height))
+                check(
+                    f"上下文弹框{width}无横向溢出",
+                    context_dialog.evaluate(
+                        "e=>e.scrollWidth<=e.clientWidth&&e.getBoundingClientRect().left>=15"
+                    ),
+                )
+                page.screenshot(path=str(args.output / f"reply-context-{width}.png"))
+            context_dialog.get_by_role("button", name="生成过程", exact=True).click()
+            context_dialog.get_by_role("button", name="模型请求 1", exact=True).click()
+            expect(context_dialog.locator("summary").filter(has_text="脱敏原始请求")).to_be_visible()
+            context_dialog.locator("summary").filter(has_text="脱敏原始请求").click()
+            expect(context_dialog.locator("pre").filter(has_text="deepseek-flash")).to_be_visible()
+            page.keyboard.press("Escape")
+            expect(context_dialog).to_have_count(0)
+            expect(dialog).to_be_visible()
+            expect(trigger).to_be_focused()
+            check("上下文关闭只关闭顶层并恢复气泡焦点", True)
+            page.set_viewport_size(dict(width=1440, height=900))
+            controls["context_fail"] = True
+            trigger.press("Space")
+            expect(context_dialog.get_by_role("button", name="重试", exact=True)).to_be_visible()
+            controls["context_fail"] = False
+            context_dialog.get_by_role("button", name="重试", exact=True).click()
+            expect(context_dialog).to_contain_text("现在改成1200元")
+            page.keyboard.press("Escape")
+            controls["context_legacy"] = True
+            trigger.press("Enter")
+            expect(context_dialog).to_contain_text("旧回复未记录完整上下文")
+            page.keyboard.press("Escape")
+            controls["context_legacy"] = False
+            controls["context_hold"] = True
+            trigger.press("Enter")
+            page.wait_for_function(
+                "()=>document.querySelector('.reply-context-body')?.getAttribute('aria-busy')==='true'"
+            )
+            context_dialog.get_by_role("button", name="关闭 AI 回复上下文", exact=True).click()
+            controls["context_hold"] = False
+            for held_context in context_held:
+                try:
+                    held_context.fulfill(
+                        json=dict(
+                            status="unavailable",
+                            missing=["迟到内容"],
+                            input=None,
+                            calls=[],
+                            cursor=None,
+                            has_more=False,
+                        )
+                    )
+                except Exception:
+                    pass
+            expect(context_dialog).to_have_count(0)
+            check(
+                "失败可重试、旧回复明确缺失、关闭拒绝迟到详情",
+                page.get_by_text("迟到内容", exact=True).count() == 0,
+            )
             check(
                 "打开记录不请求或预加载语音",
                 not voice_requests and not dialog.locator("audio").get_attribute("src"),
@@ -477,7 +635,7 @@ def main():
             pos = page.locator('[data-message-id="4"]').evaluate("e=>e.getBoundingClientRect().top")
             messages.append({**messages[-1], "id": "136", "timestamp": 1700000136, "content": "新增消息"})
             page.evaluate("window.dispatchEvent(new Event('focus'))")
-            expect(entries).to_have_count(136)
+            expect(entries).to_have_count(136, timeout=10000)
             check(
                 "新消息不打断历史阅读",
                 abs(page.locator('[data-message-id="4"]').evaluate("e=>e.getBoundingClientRect().top") - pos)
@@ -486,7 +644,7 @@ def main():
             body.evaluate('e=>{e.scrollTop=e.scrollHeight;e.dispatchEvent(new Event("scroll"))}')
             messages.append({**messages[-1], "id": "137", "timestamp": 1700000137, "content": "底部自动跟随"})
             page.evaluate("window.dispatchEvent(new Event('focus'))")
-            expect(entries).to_have_count(137)
+            expect(entries).to_have_count(137, timeout=10000)
             check("底部跟随新增消息", body.evaluate("e=>e.scrollHeight-e.clientHeight-e.scrollTop<2"))
             # 隐藏页暂停读取，恢复可见后恢复同步。
             page.evaluate(

@@ -1,3 +1,4 @@
+import re
 import time
 from contextlib import asynccontextmanager
 from typing import Literal
@@ -396,6 +397,40 @@ def create_app(config=None, gateway_factory=None, sms_provider=None, auth_clock=
         if body is None:
             raise HTTPException(404, "图片暂不可用")
         return Response(body, media_type="image/png")
+
+    @app.get(
+        PREFIX + "/accounts/{aid}/conversations/{cid}/history/{mid}/context", dependencies=[Depends(auth)]
+    )
+    async def reply_context(
+        aid: int,
+        cid: int,
+        mid: int,
+        call_id: str | None = Query(default=None, max_length=64),
+        cursor: str | None = Query(default=None, max_length=1024),
+        limit: int = Query(default=50, ge=1, le=100),
+    ):
+        from .reply_context import ContextNotFound, history_context
+
+        try:
+            result = await database_call(history_context, manager, aid, cid, mid, call_id, cursor, limit)
+        except ContextNotFound:
+            raise HTTPException(404, "回复上下文暂不可用") from None
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @app.get(
+        PREFIX + "/accounts/{aid}/conversations/{cid}/history/{mid}/context/images/{sha256}",
+        dependencies=[Depends(auth)],
+    )
+    async def reply_context_image(aid: int, cid: int, mid: int, sha256: str):
+        from .reply_context import ContextNotFound, context_image
+
+        try:
+            if not re.fullmatch(r"[a-f0-9]{64}", sha256):
+                raise ContextNotFound()
+            body = await database_call(context_image, manager, aid, cid, mid, sha256)
+        except ContextNotFound:
+            raise HTTPException(404, "图片暂不可用") from None
+        return Response(body, media_type="image/png", headers={"Cache-Control": "no-store"})
 
     @app.get(PREFIX + "/accounts/{aid}/conversations/{cid}/history/{mid}/voice", dependencies=[Depends(auth)])
     async def chat_voice(aid: int, cid: int, mid: int, request: Request):

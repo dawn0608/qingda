@@ -522,6 +522,7 @@ class Worker:
                         from .tool_generation import add_usage
 
                         combined = json.loads(json.dumps(usage))
+                        trace.update(details)
                         add_usage(combined, task.get("_wait_usage", {}))
                         self.update(
                             tid,
@@ -530,6 +531,7 @@ class Worker:
                                 {
                                     **trace,
                                     **details,
+                                    "context_capture": execution.capture.manifest(),
                                     "reply_model_rounds": details.get("model_rounds", 0),
                                     "model_rounds": details.get("model_rounds", 0)
                                     + task.get("_wait_rounds", 0),
@@ -543,7 +545,9 @@ class Worker:
                         config,
                         prompt,
                         context,
-                        checkpoint=Checkpoint(self.store, tid, fingerprint(config, prompt, context)),
+                        checkpoint=Checkpoint(
+                            self.store, tid, fingerprint(config, prompt, context), execution.capture
+                        ),
                         guard=generation_guard,
                         progress=generation_progress,
                         decision_mode=True,
@@ -630,6 +634,14 @@ class Worker:
                     tid,
                     "ready",
                     content=content,
+                    trace_json=json.dumps(
+                        {
+                            **trace,
+                            "reply_model_rounds": trace.get("model_rounds", 0),
+                            "model_rounds": trace.get("model_rounds", 0) + task.get("_wait_rounds", 0),
+                            "context_capture": execution.capture.manifest(),
+                        }
+                    ),
                     usage_json=json.dumps(response.get("usage") or {}),
                     duration_ms=int((time.monotonic() - start) * 1000),
                 )

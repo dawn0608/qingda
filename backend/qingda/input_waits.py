@@ -196,7 +196,13 @@ async def classify(gateway, config, current, source, execution):
     for attempt in range(3):
 
         async def call():
-            return await gateway.chat(config, messages, [TOOL])
+            from .context_capture import STAGE
+
+            token = STAGE.set("input_control")
+            try:
+                return await gateway.chat(config, messages, [TOOL])
+            finally:
+                STAGE.reset(token)
 
         response = await execution.slot(
             "deepseek", DEEPSEEK_REQUEST_LIMIT, lambda: execution.run("text", call)
@@ -212,8 +218,25 @@ async def classify(gateway, config, current, source, execution):
             ):
                 raise ProviderError("invalid_wait_control")
             result = validate_control(json.loads(calls[0]["function"]["arguments"]), current)
+            execution.capture.tool(
+                {
+                    "call_id": calls[0].get("id") or "input-control-" + uuid.uuid4().hex,
+                    "name": "finish_input_control",
+                    "arguments": json.loads(calls[0]["function"]["arguments"]),
+                    "result": {"ok": True, "data": result},
+                },
+                "input_control",
+            )
             return result, usage, attempt + 1
         except (KeyError, TypeError, ValueError, IndexError, ProviderError):
+            execution.capture.tool(
+                {
+                    "call_id": "input-control-invalid-" + uuid.uuid4().hex,
+                    "name": "finish_input_control",
+                    "result": {"ok": False, "error": {"code": "invalid_wait_control"}},
+                },
+                "input_control",
+            )
             # 重试只含受限控制输入，不保留不可信协议内容、不开放业务工具。
             if attempt == 2:
                 raise ProviderError("invalid_wait_control")

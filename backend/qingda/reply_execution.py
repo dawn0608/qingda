@@ -67,6 +67,9 @@ class Execution:
         self.key = (task["id"], revision(task))
         self.owner = task["_owner"]
         self.text_limit = min(TEXT_TIMEOUT, text_limit)
+        from .context_capture import Capture
+
+        self.capture = Capture(manager, task)
 
     def initialize(self):
         now = time.time()
@@ -188,6 +191,9 @@ class Execution:
     async def run(self, phase, factory):
         remaining = await database_call(self.phase, phase, True)
         token = AUDIT.set(self.audit)
+        from .context_capture import CURRENT
+
+        context_token = CURRENT.set(self.capture)
         outcome = "completed"
         try:
             return await asyncio.wait_for(factory(), remaining)
@@ -200,6 +206,7 @@ class Execution:
             outcome = "interrupted"
             raise
         finally:
+            CURRENT.reset(context_token)
             AUDIT.reset(token)
             elapsed = await database_call(self.phase, phase, False)
             await database_call(self.event, phase, {"seconds": elapsed, "outcome": outcome})

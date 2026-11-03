@@ -1,0 +1,178 @@
+.account-dialog.reply-context-dialog {
+  width: min(1000px, calc(100vw - 32px));
+  height: min(820px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+}
+.reply-context-dialog > header {
+  gap: 16px;
+  padding: 12px 24px;
+}
+.reply-context-dialog h2 {
+  flex: 1;
+  font-size: 16px;
+}
+.reply-context-tabs {
+  display: flex;
+  gap: 24px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.reply-context-tabs button {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.reply-context-tabs button[aria-pressed="true"] {
+  color: var(--text);
+  border-bottom-color: var(--brand);
+}
+.reply-context-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 32px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.reply-context-body section {
+  margin-top: 28px;
+}
+.reply-context-body h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.reply-context-system > summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+.reply-context-system .reply-context-text {
+  margin-top: 12px;
+}
+.reply-context-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reply-context-coverage {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.reply-context-coverage p {
+  margin: 4px 0;
+}
+.reply-context-muted,
+.reply-context-fields dt,
+.reply-context-images figcaption {
+  color: var(--muted);
+  font-size: 12px;
+}
+.reply-context-items {
+  padding-left: 24px;
+  margin: 0;
+}
+.reply-context-items > li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.reply-context-fields {
+  margin: 0;
+}
+.reply-context-fields > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 12px;
+  margin: 6px 0;
+}
+.reply-context-fields dd {
+  min-width: 0;
+  margin: 0;
+}
+.reply-context-fields .reply-context-fields > div {
+  display: block;
+}
+.reply-context-calls {
+  padding-left: 24px;
+}
+.reply-context-calls > li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.reply-context-calls > li > span {
+  display: block;
+  margin-top: 4px;
+}
+.reply-context-body button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.reply-context-body button:hover {
+  background: var(--surface-hover);
+}
+.reply-context-detail {
+  margin-top: 16px;
+}
+.reply-context-raw {
+  margin-top: 12px;
+}
+.reply-context-raw summary {
+  cursor: pointer;
+}
+.reply-context-raw button {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+.reply-context-raw pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+.reply-context-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.reply-context-images figure {
+  margin: 0;
+  max-width: 240px;
+}
+.chat-history-bubble[role="button"] {
+  cursor: pointer;
+}
+.chat-history-bubble[role="button"]:hover {
+  border-color: var(--border);
+}
+.chat-history-bubble[role="button"]:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .reply-context-dialog > header {
+    padding: 12px 16px;
+  }
+  .reply-context-tabs {
+    padding: 0 16px;
+  }
+  .reply-context-body {
+    padding: 16px;
+  }
+  .reply-context-fields > div {
+    display: block;
+  }
+}
