@@ -725,3 +725,35 @@ async def test_orphaned_attempt_and_missing_response_are_not_reported_complete(t
     assert body["calls"][0]["request_available"] is True
     assert body["calls"][0]["response_available"] is False
     assert body["calls"][0]["available"] is False
+
+
+def test_legacy_summary_uses_frozen_coverage_instead_of_current_configuration(tmp_path):
+    from qingda.context_snapshot import freeze
+
+    http, store, manager, aid, cid, task, capture = capture_fixture(tmp_path)
+    freeze(
+        manager,
+        task,
+        [
+            {
+                "current": True,
+                "role": "user",
+                "sender": "alice",
+                "message_id": task["message_id"],
+                "content": "正文",
+                "history_selection": {
+                    "scope": "current_conversation",
+                    "selected_messages": 24,
+                    "has_more": True,
+                    "trim_reasons": {"round_limit": 6},
+                },
+            }
+        ],
+    )
+    path = accepted_path(store, manager, aid, cid, task, capture)
+    with store.transaction() as conn:
+        conn.execute("UPDATE tasks SET trace_json='{}' WHERE id=%s", (task["id"],))
+    body = http.get(path).json()
+    assert body["status"] == "partial"
+    assert body["input"]["data"]["history_coverage"]["selected_messages"] == 24
+    assert body["input"]["data"]["history_coverage"]["trim_reasons"] == {"round_limit": 6}

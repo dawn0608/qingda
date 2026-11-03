@@ -271,6 +271,10 @@ export function ReplyContextDialog({
     ...(data.conversation_history || []),
     ...(data.group_background || []),
   ];
+  const historyCount = data.legacy_context
+    ? (coverage.selected_messages ??
+      data.legacy_context.filter((item: Value) => !item.current).length)
+    : history.length;
   return (
     <dialog
       ref={dialog}
@@ -350,7 +354,8 @@ export function ReplyContextDialog({
                     {coverage.scope === "current_member"
                       ? "群聊当前成员"
                       : "当前会话"}{" "}
-                    · 已加载 {history.length} 条历史
+                    · {data.legacy_context ? "清单中" : "已加载"} {historyCount}{" "}
+                    条历史
                     {input.size?.tokens != null
                       ? ` · 输入约 ${input.size.tokens.toLocaleString()} tokens`
                       : ""}
