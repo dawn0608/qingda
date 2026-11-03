@@ -131,7 +131,14 @@ def legacy(manager, conn, task):
 
         try:
             context = hydrate(manager, conn, task, decoded(row["manifest"]))
-            result["input"] = {"system": [], "data": {"legacy_context": safe(context)}, "images": []}
+            coverage = next(
+                (value["history_selection"] for value in context if value.get("history_selection")), {}
+            )
+            result["input"] = {
+                "system": [],
+                "data": {"legacy_context": safe(context), "history_coverage": coverage},
+                "images": [],
+            }
             result["status"] = "partial"
         except (ProviderError, ValueError, KeyError, TypeError):
             result["missing"].append("历史来源已变化，无法核验原文")

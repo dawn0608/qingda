@@ -147,9 +147,16 @@ def main():
             if controls["context_legacy"]:
                 r.fulfill(
                     json=dict(
-                        status="unavailable",
+                        status="partial",
                         missing=["旧回复未记录完整上下文"],
-                        input=None,
+                        input=dict(
+                            system=[],
+                            data=dict(
+                                legacy_context=[dict(content="旧清单原文")],
+                                history_coverage=dict(scope="current_conversation", selected_messages=24),
+                            ),
+                            images=[],
+                        ),
                         calls=[],
                         cursor=None,
                         has_more=False,
@@ -412,6 +419,8 @@ def main():
             controls["context_legacy"] = True
             trigger.press("Enter")
             expect(context_dialog).to_contain_text("旧回复未记录完整上下文")
+            expect(context_dialog).to_contain_text("清单中 24 条历史")
+            check("旧回复按冻结清单显示历史数量", True)
             page.keyboard.press("Escape")
             controls["context_legacy"] = False
             controls["context_hold"] = True
