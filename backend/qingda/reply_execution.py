@@ -110,6 +110,7 @@ class Execution:
             ).fetchone()
             # 进程崩溃时，未结算时间仍消耗原预算。正常修订只读取本修订的记录。
             if row["phase"]:
+                self.capture.missing = True
                 elapsed = max(0, now - row["phase_started"])
                 field = "media_seconds" if row["phase"] == "media" else "text_seconds"
                 conn.execute(

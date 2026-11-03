@@ -9,6 +9,7 @@ import struct
 
 from .chat_records import SELECT, SOURCE, conversation, decoded
 from .context_capture import VERSION, checksum, safe
+from .media_access import history_media_access
 
 
 class ContextNotFound(Exception):
@@ -70,19 +71,32 @@ def records(conn, task):
     trace = decoded(task["trace_json"])
     manifest = trace.get("context_capture", {})
     events, blocks = {}, {}
+    expected = manifest.get("expected", [])
+    expected_ids = {item["call_id"] for item in expected}
+    orphaned, provider_calls = False, 0
     if manifest.get("version") != VERSION:
-        return manifest, events, blocks
+        return manifest, events, blocks, False
     for row in conn.execute(
-        "SELECT phase,details FROM reply_execution_events WHERE task_id=%s AND (phase='context_blob' OR (input_revision=%s AND phase IN ('context_request','context_response','context_tool'))) ORDER BY id",
+        "SELECT phase,details FROM reply_execution_events WHERE task_id=%s AND (phase='context_blob' OR (input_revision=%s AND phase IN ('context_request','context_response','context_tool','provider'))) ORDER BY id",
         (task["id"], manifest["input_revision"]),
     ):
         value = decoded(row["details"])
+        if row["phase"] == "provider":
+            provider_calls += int(bool(value.get("requested_model")))
+            continue
+        if row["phase"] == "context_request" and value.get("call_id") not in expected_ids:
+            orphaned = True
         if row["phase"] == "context_blob":
             if checksum(value.get("value")) == value.get("sha256"):
                 blocks[value["sha256"]] = value["value"]
         elif value.get("run_id") in manifest.get("runs", []):
             events.setdefault(value.get("call_id"), {})[row["phase"].removeprefix("context_")] = value
-    return manifest, events, blocks
+    return (
+        manifest,
+        events,
+        blocks,
+        orphaned or provider_calls > sum(item["kind"] == "model" for item in expected),
+    )
 
 
 def request_data(value, blocks):
@@ -138,15 +152,25 @@ def legacy(manager, conn, task):
 
 
 def history_context(manager, aid, cid, mid, call_id=None, cursor=None, limit=50):
+    result = read_context(manager, aid, cid, mid, call_id, cursor, limit)
+    # 旧快照可能与清空并发；返回前用新事务核验，不能再次读取同一旧快照。
+    with manager.store.connect() as conn:
+        source(conn, aid, cid, mid)
+    return result
+
+
+def read_context(manager, aid, cid, mid, call_id=None, cursor=None, limit=50):
     with manager.store.connect(snapshot=True) as conn:
         _, task = source(conn, aid, cid, mid)
-        manifest, events, blocks = records(conn, task) if task else ({}, {}, {})
+        manifest, events, blocks, orphaned = records(conn, task) if task else ({}, {}, {}, False)
         if manifest.get("version") != VERSION:
             if call_id or cursor:
                 raise ContextNotFound()
             return legacy(manager, conn, task)
         expected = manifest.get("expected", [])
         missing = ["部分生成记录保存失败"] if manifest.get("missing") else []
+        if orphaned:
+            missing.append("存在中断或未绑定的生成尝试")
         calls, initial = [], None
         for item in expected:
             event = events.get(item["call_id"], {})
@@ -161,7 +185,9 @@ def history_context(manager, aid, cid, mid, call_id=None, cursor=None, limit=50)
                     "timestamp": event.get("request", {}).get("timestamp"),
                     "model": (request or {}).get("model"),
                     **{key: event.get("response", {}).get(key) for key in ("status", "duration_ms")},
-                    "available": bool(request),
+                    "request_available": bool(request),
+                    "response_available": "response" in event,
+                    "available": bool(request) and "response" in event,
                 }
             else:
                 tool = event.get("tool")
@@ -197,6 +223,8 @@ def history_context(manager, aid, cid, mid, call_id=None, cursor=None, limit=50)
                 "kind": item["kind"],
                 "request": request_data(event.get("request"), blocks),
                 "response": event.get("response"),
+                "request_available": bool(request_data(event.get("request"), blocks)),
+                "response_available": "response" in event,
                 "tool": event.get("tool"),
                 "omitted": result["omitted"],
             }
@@ -219,11 +247,21 @@ def history_context(manager, aid, cid, mid, call_id=None, cursor=None, limit=50)
 
 
 def context_image(manager, aid, cid, mid, sha):
+    with history_media_access(manager.media.directory, cid) as acquired:
+        if not acquired:
+            raise ContextNotFound()
+        body = read_context_image(manager, aid, cid, mid, sha)
+        with manager.store.connect() as conn:
+            source(conn, aid, cid, mid)
+        return body
+
+
+def read_context_image(manager, aid, cid, mid, sha):
     with manager.store.connect(snapshot=True) as conn:
         _, task = source(conn, aid, cid, mid)
         if not task:
             raise ContextNotFound()
-        manifest, events, blocks = records(conn, task)
+        manifest, events, blocks, _ = records(conn, task)
         frame = None
         for item in manifest.get("expected", []):
             request = request_data(events.get(item["call_id"], {}).get("request"), blocks)

@@ -92,7 +92,9 @@ def main():
     delete_requests = []
     voice_requests = []
     controls["voice_fail"] = False
-    controls.update(context_fail=False, context_hold=False, context_legacy=False)
+    controls.update(
+        context_fail=False, context_hold=False, context_legacy=False, context_response_missing=False
+    )
     context_requests, context_held = [], []
     sound = io.BytesIO()
     with wave.open(sound, "wb") as audio:
@@ -177,6 +179,9 @@ def main():
                 r.fulfill(
                     json=dict(
                         call_id=params["call_id"][0],
+                        kind="model",
+                        request_available=True,
+                        response_available=not controls["context_response_missing"],
                         request=dict(
                             model="deepseek-flash",
                             messages=[
@@ -187,7 +192,9 @@ def main():
                             ],
                             tools=[],
                         ),
-                        response=dict(status=200, response={"choices": []}),
+                        response=None
+                        if controls["context_response_missing"]
+                        else dict(status=200, response={"choices": []}),
                     )
                 )
             else:
@@ -376,11 +383,24 @@ def main():
             expect(context_dialog.locator("summary").filter(has_text="脱敏原始请求")).to_be_visible()
             context_dialog.locator("summary").filter(has_text="脱敏原始请求").click()
             expect(context_dialog.locator("pre").filter(has_text="deepseek-flash")).to_be_visible()
+            page.context.grant_permissions(["clipboard-read", "clipboard-write"])
+            context_dialog.get_by_role("button", name="复制", exact=True).click()
+            page.wait_for_function(
+                "async()=>{try{return JSON.parse(await navigator.clipboard.readText()).model==='deepseek-flash'}catch{return false}}"
+            )
+            check("脱敏实际请求可复制为完整JSON", True)
             page.keyboard.press("Escape")
             expect(context_dialog).to_have_count(0)
             expect(dialog).to_be_visible()
             expect(trigger).to_be_focused()
             check("上下文关闭只关闭顶层并恢复气泡焦点", True)
+            controls["context_response_missing"] = True
+            trigger.press("Enter")
+            context_dialog.get_by_role("button", name="生成过程", exact=True).click()
+            context_dialog.get_by_role("button", name="模型请求 1", exact=True).click()
+            expect(context_dialog).to_contain_text("该次模型响应记录缺失")
+            page.keyboard.press("Escape")
+            controls["context_response_missing"] = False
             page.set_viewport_size(dict(width=1440, height=900))
             controls["context_fail"] = True
             trigger.press("Space")

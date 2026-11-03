@@ -206,7 +206,11 @@ class Capture:
         if value and value.get("version") == VERSION and value.get("input_revision") == self.revision:
             self.runs = list(dict.fromkeys(value.get("runs", []) + [self.run_id]))
             self.expected = list(value.get("expected", [])) + self.expected
-            self.tool_ids = {item["native_id"] for item in self.expected if "native_id" in item}
+            self.tool_ids = {
+                (item.get("stage", "reply"), item["native_id"])
+                for item in self.expected
+                if "native_id" in item
+            }
             self.missing = self.missing or bool(value.get("missing"))
         else:
             self.missing = True
@@ -257,9 +261,10 @@ class Capture:
 
     def tool(self, value, stage="reply"):
         native_id = value["call_id"]
-        if native_id in self.tool_ids:
+        identity = (stage, native_id)
+        if identity in self.tool_ids:
             return
-        self.tool_ids.add(native_id)
+        self.tool_ids.add(identity)
         call_id = uuid.uuid4().hex
         self.expected.append({"call_id": call_id, "kind": "tool", "stage": stage, "native_id": native_id})
         self.emit(

@@ -476,6 +476,14 @@ export function ReplyContextDialog({
                           )}
                           {detail && (
                             <>
+                              {detail.kind === "model" &&
+                                detail.request_available === false && (
+                                  <p>该次模型请求记录缺失</p>
+                                )}
+                              {detail.kind === "model" &&
+                                detail.response_available === false && (
+                                  <p>该次模型响应记录缺失</p>
+                                )}
                               {detail.tool && <Content value={detail.tool} />}
                               {detail.request && (
                                 <Raw

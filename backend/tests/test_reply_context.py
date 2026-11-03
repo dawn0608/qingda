@@ -295,6 +295,11 @@ async def test_image_snapshot_is_hash_verified_and_scoped(tmp_path):
         store.query("SELECT details FROM reply_execution_events WHERE task_id=%s", (task["id"],))
     )
     assert http.get(path + "/images/" + sha).content == body
+    from qingda.media_access import history_media_access
+
+    with history_media_access(manager.media.directory, cid, exclusive=True) as acquired:
+        assert acquired
+        assert http.get(path + "/images/" + sha).status_code == 404
     assert http.get(path + "/images/" + "0" * 64).status_code == 404
     manager.media.path(frame).write_bytes(b"corrupt")
     assert http.get(path + "/images/" + sha).status_code == 404
@@ -639,3 +644,84 @@ async def test_capture_keeps_all_fixed_context_case_requests_unchanged(tmp_path)
             assert sent[-1] == baseline, case["id"]
     finally:
         await gateway.close()
+
+
+async def test_clear_committed_during_snapshot_read_cannot_return_deleted_context(tmp_path, monkeypatch):
+    from qingda import reply_context
+    from qingda.context_capture import Writer
+    from qingda.history_deletion import advance, start
+
+    http, store, manager, aid, cid, task, capture = capture_fixture(tmp_path)
+    writer = Writer(store)
+    call_id = capture.request(
+        {
+            "messages": [
+                {"role": "user", "content": json.dumps({"current_messages": [{"content": "清空前的原文"}]})}
+            ]
+        },
+        {},
+        writer,
+    )
+    capture.response(call_id, {"choices": []}, 200, 1)
+    await writer.drain()
+    path = accepted_path(store, manager, aid, cid, task, capture)
+    original, cleared = reply_context.sections, []
+
+    def clear_during_read(request):
+        if not cleared:
+            cleared.append(True)
+            job = start(manager, aid, cid, str(uuid.uuid4()))
+            advance(manager, job["id"])
+        return original(request)
+
+    monkeypatch.setattr(reply_context, "sections", clear_during_read)
+    assert http.get(path).status_code == 404
+
+
+async def test_reused_native_ids_in_different_stages_keep_both_tool_executions(tmp_path):
+    from qingda.context_capture import Writer
+
+    http, store, manager, aid, cid, task, capture = capture_fixture(tmp_path)
+    writer = Writer(store)
+    call_id = capture.request(
+        {"messages": [{"role": "user", "content": json.dumps({"current_messages": [{"content": "问题"}]})}]},
+        {},
+        writer,
+    )
+    capture.response(call_id, {"choices": []}, 200, 1)
+    capture.tool(
+        {"call_id": "call_0", "name": "finish_input_control", "result": {"ok": True}}, "input_control"
+    )
+    capture.tool({"call_id": "call_0", "name": "finish_reply", "result": {"ok": True}}, "reply")
+    await writer.drain()
+    path = accepted_path(store, manager, aid, cid, task, capture)
+    assert [call.get("name") for call in http.get(path).json()["calls"] if call["kind"] == "tool"] == [
+        "finish_input_control",
+        "finish_reply",
+    ]
+
+
+async def test_orphaned_attempt_and_missing_response_are_not_reported_complete(tmp_path):
+    from qingda.context_capture import Capture, Writer
+
+    http, store, manager, aid, cid, task, capture = capture_fixture(tmp_path)
+    writer = Writer(store)
+    payload = {
+        "messages": [{"role": "user", "content": json.dumps({"current_messages": [{"content": "问题"}]})}]
+    }
+    capture.request(payload, {}, writer)
+    await writer.drain()
+    restored = Capture(manager, task)
+    call_id = restored.request(payload, {}, writer)
+    restored.response(call_id, {"choices": []}, 200, 1)
+    await writer.drain()
+    path = accepted_path(store, manager, aid, cid, task, restored)
+    assert http.get(path).json()["status"] == "partial"
+    with store.transaction() as conn:
+        conn.execute(
+            "DELETE FROM reply_execution_events WHERE task_id=%s AND phase='context_response'", (task["id"],)
+        )
+    body = http.get(path).json()
+    assert body["calls"][0]["request_available"] is True
+    assert body["calls"][0]["response_available"] is False
+    assert body["calls"][0]["available"] is False
