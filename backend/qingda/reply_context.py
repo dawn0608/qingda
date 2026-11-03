@@ -149,6 +149,7 @@ def legacy(manager, conn, task):
                 "call_id": f"legacy-{index}",
                 "kind": "tool",
                 "stage": "reply",
+                "name": value.get("name") or "历史工具",
                 "legacy": True,
                 "tool": safe(value),
             }

@@ -752,8 +752,12 @@ def test_legacy_summary_uses_frozen_coverage_instead_of_current_configuration(tm
     )
     path = accepted_path(store, manager, aid, cid, task, capture)
     with store.transaction() as conn:
-        conn.execute("UPDATE tasks SET trace_json='{}' WHERE id=%s", (task["id"],))
+        conn.execute(
+            "UPDATE tasks SET trace_json=%s WHERE id=%s",
+            (json.dumps({"tool_calls": [{"name": "finish_reply", "result": {"ok": True}}]}), task["id"]),
+        )
     body = http.get(path).json()
     assert body["status"] == "partial"
     assert body["input"]["data"]["history_coverage"]["selected_messages"] == 24
     assert body["input"]["data"]["history_coverage"]["trim_reasons"] == {"round_limit": 6}
+    assert body["calls"][0]["name"] == "finish_reply"
