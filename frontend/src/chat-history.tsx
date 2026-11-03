@@ -8,6 +8,7 @@ import { ChatText, copyChatText } from "./chat-content";
 import { ChatImage, type HistoryImage } from "./chat-image";
 import { ChatVoice, useVoicePlayback, type HistoryVoice } from "./chat-voice";
 import { ClearChatHistory, type HistoryDeletion } from "./chat-history-clear";
+import { ReplyContextDialog } from "./reply-context";
 import "./chat-history.css";
 
 type Message = {
@@ -96,9 +97,16 @@ export function ChatHistoryDialog({
   const [failed, setFailed] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearVersion, setClearVersion] = useState(0);
+  const [contextMessage, setContextMessage] = useState<{
+    id: string;
+    trigger: HTMLElement;
+  } | null>(null);
   const endpoint = `/accounts/${aid}/conversations/${contact.id}/history`;
   const source = `chat-history:${aid}:${contact.id}`;
   const playback = useVoicePlayback(`${source}:${query}`);
+  useEffect(() => {
+    setContextMessage(null);
+  }, [aid, contact.id, search, view.history_revision, clearing]);
 
   const anchor = (follow = false): Anchor => {
     const element = list.current;
@@ -459,6 +467,47 @@ export function ChatHistoryDialog({
             </div>
             <div
               className={`chat-history-bubble${item.voice ? " chat-voice-bubble" : ""}`}
+              role={item.source === "auto" ? "button" : undefined}
+              tabIndex={item.source === "auto" ? 0 : undefined}
+              aria-label={
+                item.source === "auto" ? "查看 AI 回复上下文" : undefined
+              }
+              title={
+                item.source === "auto"
+                  ? "点击查看本条回复的 AI 上下文"
+                  : undefined
+              }
+              onClick={
+                item.source === "auto"
+                  ? (event) => {
+                      if (
+                        window.getSelection()?.toString() ||
+                        (event.target as HTMLElement).closest("button, a")
+                      )
+                        return;
+                      setContextMessage({
+                        id: item.id,
+                        trigger: event.currentTarget,
+                      });
+                    }
+                  : undefined
+              }
+              onKeyDown={
+                item.source === "auto"
+                  ? (event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        setContextMessage({
+                          id: item.id,
+                          trigger: event.currentTarget,
+                        });
+                      }
+                    }
+                  : undefined
+              }
             >
               {item.voice && (
                 <ChatVoice
@@ -503,6 +552,14 @@ export function ChatHistoryDialog({
         )}
       </div>
       <audio ref={playback.element} preload="none" hidden />
+      {contextMessage && (
+        <ReplyContextDialog
+          key={`${source}:${contextMessage.id}:${view.history_revision}`}
+          endpoint={`${endpoint}/${contextMessage.id}/context`}
+          trigger={contextMessage.trigger}
+          onClose={() => setContextMessage(null)}
+        />
+      )}
     </dialog>
   );
 }
