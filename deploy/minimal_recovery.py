@@ -128,7 +128,11 @@ def restore_runtime(app, stage):
     record = stage / "runtime-transition.json"
     if record.exists():
         alias = Path(json.loads(record.read_text())["alias"])
-        if alias.is_relative_to(stage) and alias.is_symlink():
+        if (
+            alias.is_relative_to(stage.parent)
+            and alias.is_symlink()
+            and alias.resolve() == (app / ".venv").resolve()
+        ):
             alias.unlink()
     active = app / ".venv"
     if active.exists():

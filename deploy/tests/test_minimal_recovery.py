@@ -61,6 +61,27 @@ def test_transition_rejects_source_path_escape_before_moving(tmp_path):
     assert (app / "release.json").exists()
 
 
+@pytest.mark.parametrize("external_prepared", [False, True])
+def test_runtime_move_and_failure_restore_do_not_copy_dependencies(tmp_path, external_prepared):
+    recovery = importlib.import_module("minimal_recovery")
+    app, stage = tmp_path / "app", tmp_path / "stage"
+    active = app / ".venv"
+    candidate = (tmp_path / "prepared" if external_prepared else stage / "candidate") / ".venv"
+    (active / "bin").mkdir(parents=True)
+    (candidate / "bin").mkdir(parents=True)
+    stage.mkdir(exist_ok=True)
+    (active / "bin/python").write_text("old runtime")
+    (candidate / "bin/python").write_text("new runtime")
+    old_inode, new_inode = (active / "bin/python").stat().st_ino, (candidate / "bin/python").stat().st_ino
+    recovery.activate_runtime(candidate / "bin/python", app, stage)
+    assert (active / "bin/python").stat().st_ino == new_inode
+    assert candidate.is_symlink()
+    recovery.restore_runtime(app, stage)
+    assert (active / "bin/python").stat().st_ino == old_inode
+    assert (stage / "venv-incomplete/bin/python").stat().st_ino == new_inode
+    assert not candidate.is_symlink()
+
+
 def test_migration_review_does_not_require_backup_for_additive_change(tmp_path):
     recovery = importlib.import_module("minimal_recovery")
     review = tmp_path / "review.json"

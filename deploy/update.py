@@ -666,6 +666,13 @@ def install_units():
 def discard_transition(stage):
     """运行核验完成后回收切换材料，不触碰历史原件或例外备份。"""
     policy = Retention(root=stage, scan_processes=pathlib.Path("/proc").exists())
+    record = stage / "runtime-transition.json"
+    if record.exists():
+        alias = pathlib.Path(json.loads(record.read_text())["alias"])
+        if alias.is_relative_to(ROOT) and alias.is_symlink() and alias.resolve() == (APP / ".venv").resolve():
+            if policy.busy(alias, ignore_current=True):
+                raise RuntimeError("prepared_runtime_alias_still_in_use")
+            alias.unlink()
     for name in ("previous-source", "venv-before", "candidate"):
         path = stage / name
         if not path.exists():
