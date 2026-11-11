@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import stat
+import tempfile
 from pathlib import Path
 
 from layout import ROOT
@@ -86,7 +87,46 @@ def unlink_verified(root, entry):
         ):
             raise ValueError("selective_cleanup_target_changed")
         reject_mounts(root, path)
-        os.unlink(parts[-1], dir_fd=current)
+        # 先移动到锁内私有目录再核验，避免 stat/unlink 间替换同名文件。
+        claim = Path(tempfile.mkdtemp(prefix=".cleanup-claim-", dir=root))
+        claim_fd = os.open(claim, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptors.append(claim_fd)
+        try:
+            os.rename(parts[-1], "payload", src_dir_fd=current, dst_dir_fd=claim_fd)
+            try:
+                moved = os.stat("payload", dir_fd=claim_fd, follow_symlinks=False)
+                try:
+                    parent = path.parent.stat()
+                    opened_parent = os.fstat(current)
+                    same_parent = (parent.st_dev, parent.st_ino) == (
+                        opened_parent.st_dev,
+                        opened_parent.st_ino,
+                    )
+                except OSError:
+                    same_parent = False
+                if (
+                    (moved.st_dev, moved.st_ino, moved.st_size, moved.st_mtime_ns)
+                    != tuple(entry["fingerprint"])
+                    or not same_parent
+                    or path.parent.resolve() != path.parent
+                ):
+                    raise ValueError("selective_cleanup_claim_changed")
+                os.unlink("payload", dir_fd=claim_fd)
+            except BaseException:
+                # link 不覆盖并发出现的文件；若原名已占用，保留 claim 待核实。
+                try:
+                    os.link(
+                        "payload", parts[-1], src_dir_fd=claim_fd, dst_dir_fd=current, follow_symlinks=False
+                    )
+                    os.unlink("payload", dir_fd=claim_fd)
+                except OSError:
+                    pass
+                raise
+        finally:
+            try:
+                claim.rmdir()
+            except OSError:
+                pass
         return value.st_size
     finally:
         for descriptor in reversed(descriptors):

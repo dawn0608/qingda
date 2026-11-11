@@ -46,6 +46,17 @@ def test_scoped_backup_restores_only_requested_table(tmp_path, monkeypatch):
             dump = Path(result["backup"]) / "data.dump"
             listing = subprocess.check_output(["pg_restore", "--list", str(dump)], text=True)
             assert "kept" in listing and "untouched" not in listing
+            with pytest.raises(subprocess.CalledProcessError):
+                server.backup(
+                    reason="isolated output limit",
+                    tables=[schema + ".kept"],
+                    files=[],
+                    release_condition="test complete",
+                    max_bytes=1,
+                )
+            failed = [p for p in root.iterdir() if p != dump.parent]
+            assert len(failed) == 1 and not (failed[0] / "data.dump").exists()
+            assert conn.execute(f'SELECT count(*) FROM "{schema}".kept').fetchone()[0] == 1
             conn.execute(f'DROP TABLE "{schema}".kept')
             from qingda.migration import pg_environment
 

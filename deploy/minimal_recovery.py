@@ -16,12 +16,25 @@ def source_path(root, name):
     return path
 
 
-def move_sources(app, stage, old):
-    names = sorted(set(old["files"]) | {"release.json"})
+def check_transition_devices(app, stage, old, spec, python):
+    paths = [app, stage, app / ".venv", Path(python).parent.parent]
+    paths += [
+        source_path(app, name) for name in set(old["files"]) | set(spec["files"]) if (app / name).exists()
+    ]
+    if len({path.stat().st_dev for path in paths}) != 1:
+        raise ValueError("release_transition_requires_same_filesystem")
+
+
+def move_sources(app, stage, old, spec=None):
+    names = set(old["files"]) | {"release.json"}
+    names.update(name for name in (spec or {}).get("files", {}) if source_path(app, name).exists())
+    names = sorted(names)
     for name in names:
         if not source_path(app, name).is_file():
             raise ValueError("missing_transition_source")
     previous = stage / "previous-source"
+    if any((app / name).stat().st_dev != stage.stat().st_dev for name in names):
+        raise ValueError("release_transition_requires_same_filesystem")
     previous.mkdir(mode=0o700)
     save_json(stage / "transition.json", {"files": names, "phase": "moving"})
     for name in names:
@@ -114,11 +127,13 @@ def activate_runtime(python, app, stage):
         return
     if runtime.is_symlink() or active.is_symlink():
         raise ValueError("unsafe_runtime_link")
+    if len({p.stat().st_dev for p in (active, runtime, stage)}) != 1:
+        raise ValueError("release_transition_requires_same_filesystem")
+    save_json(stage / "runtime-transition.json", {"alias": str(runtime)})
     os.rename(active, stage / "venv-before")
     os.rename(runtime, active)
     # 回调缓冲进程仍使用候选解释器路径；切换期间只建链接，不复制依赖。
     runtime.symlink_to(active, target_is_directory=True)
-    save_json(stage / "runtime-transition.json", {"alias": str(runtime)})
 
 
 def restore_runtime(app, stage):
@@ -126,6 +141,7 @@ def restore_runtime(app, stage):
     if not old.exists():
         return
     record = stage / "runtime-transition.json"
+    destination = stage / "venv-incomplete"
     if record.exists():
         alias = Path(json.loads(record.read_text())["alias"])
         if (
@@ -134,7 +150,10 @@ def restore_runtime(app, stage):
             and alias.resolve() == (app / ".venv").resolve()
         ):
             alias.unlink()
+            destination = alias
+        elif alias.is_relative_to(stage.parent) and not alias.exists() and not alias.is_symlink():
+            destination = alias
     active = app / ".venv"
     if active.exists():
-        os.rename(active, stage / "venv-incomplete")
+        os.rename(active, destination)
     os.rename(old, active)

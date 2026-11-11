@@ -4,6 +4,7 @@ import hashlib
 import importlib
 import io
 import json
+import os
 import sys
 import tarfile
 from pathlib import Path
@@ -50,6 +51,20 @@ def test_move_transition_keeps_inode_and_restores_partial_switch(tmp_path):
     assert not list(stage.glob("*.tar*"))
 
 
+def test_transition_restores_existing_newly_managed_file(tmp_path):
+    recovery = importlib.import_module("minimal_recovery")
+    app, stage = tmp_path / "app", tmp_path / "stage"
+    app.mkdir()
+    stage.mkdir()
+    (app / "release.json").write_text("{}")
+    (app / "adopted.py").write_text("pre-existing")
+    spec = {"files": {"adopted.py": ""}}
+    recovery.move_sources(app, stage, {"files": {}}, spec)
+    (app / "adopted.py").write_text("new")
+    recovery.restore_sources(app, stage, spec)
+    assert (app / "adopted.py").read_text() == "pre-existing"
+
+
 def test_transition_rejects_source_path_escape_before_moving(tmp_path):
     recovery = importlib.import_module("minimal_recovery")
     app, stage = tmp_path / "app", tmp_path / "stage"
@@ -78,7 +93,7 @@ def test_runtime_move_and_failure_restore_do_not_copy_dependencies(tmp_path, ext
     assert candidate.is_symlink()
     recovery.restore_runtime(app, stage)
     assert (active / "bin/python").stat().st_ino == old_inode
-    assert (stage / "venv-incomplete/bin/python").stat().st_ino == new_inode
+    assert (candidate / "bin/python").stat().st_ino == new_inode
     assert not candidate.is_symlink()
 
 
@@ -141,6 +156,33 @@ def test_selective_cleanup_validates_entire_manifest_before_deletion(tmp_path):
     with pytest.raises(ValueError):
         cleanup.run(plan, apply=True, scan_processes=False)
     assert first.exists() and changed.exists()
+
+
+@pytest.mark.parametrize("change", ["replace_file", "move_parent"])
+def test_cleanup_claim_rechecks_identity_and_boundary(tmp_path, monkeypatch, change):
+    cleanup = importlib.import_module("selective_cleanup")
+    root = tmp_path / "root"
+    folder = root / "folder"
+    folder.mkdir(parents=True)
+    target = folder / "target"
+    target.write_text("reviewed")
+    entry = cleanup.file_entry(target, "obsolete")
+    rename = os.rename
+
+    def race(source, destination, **kwargs):
+        if source == "target":
+            if change == "replace_file":
+                target.unlink()
+                target.write_text("unique replacement")
+            else:
+                rename(folder, tmp_path / "outside")
+        return rename(source, destination, **kwargs)
+
+    monkeypatch.setattr(cleanup.os, "rename", race)
+    with pytest.raises(ValueError):
+        cleanup.run({"root": str(root), "entries": [entry]}, apply=True, scan_processes=False)
+    survivor = target if change == "replace_file" else tmp_path / "outside/target"
+    assert survivor.read_text() == ("unique replacement" if change == "replace_file" else "reviewed")
 
 
 def test_selective_cleanup_rejects_symlink_and_outside_root(tmp_path):
@@ -426,6 +468,46 @@ def test_failed_release_restores_moved_source_without_old_database(release_envir
     assert json.loads((app / "release.json").read_text())["revision"] == "old"
     assert "APP_REVISION=old" in (app / ".env").read_text()
     assert not list(root.rglob("*.dump"))
+
+
+def test_cleanup_failure_does_not_fail_or_roll_back_active_release(release_environment, monkeypatch):
+    update, app, root, bundle = release_environment
+
+    def fail_cleanup(stage):
+        raise OSError("injected cleanup failure")
+
+    monkeypatch.setattr(update, "discard_transition", fail_cleanup)
+    update.release(bundle, retention.sha(bundle))
+    assert (app / "app.py").read_text() == "new source"
+    stage = next(root.iterdir())
+    assert json.loads((stage / "receipt.json").read_text())["cleanup_pending"] is True
+    assert json.loads((stage / "retention.json").read_text())["state"] == "awaiting_acceptance"
+
+
+def test_scoped_file_backup_rejects_symlink_replacement(tmp_path, monkeypatch):
+    server = importlib.import_module("server")
+    config, root = tmp_path / "config", tmp_path / "backups"
+    config.mkdir()
+    root.mkdir()
+    selected, outside = config / "key", tmp_path / "outside"
+    selected.write_text("allowed")
+    outside.write_text("out of scope")
+    monkeypatch.setattr(server, "CONFIG", config)
+    monkeypatch.setattr(server, "ROOT", root)
+    monkeypatch.setattr(retention, "ROOT", root)
+    register = server.register
+
+    def swap(*args):
+        result = register(*args)
+        if args[2] == "preparing":
+            selected.unlink()
+            selected.symlink_to(outside)
+        return result
+
+    monkeypatch.setattr(server, "register", swap)
+    with pytest.raises((ValueError, OSError)):
+        server.backup(reason="core", tables=[], files=[str(selected)], release_condition="done", lock=False)
+    assert not any(p.name == "key" for p in root.rglob("*"))
 
 
 def test_lossy_release_captures_final_core_state_after_stopping_writes(

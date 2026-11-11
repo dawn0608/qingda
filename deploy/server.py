@@ -5,7 +5,9 @@ import json
 import os
 import pathlib
 import re
+import resource
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -44,9 +46,40 @@ def validate_scope(reason, tables, files, release_condition):
     return selected
 
 
-def backup(*, reason, tables, files, release_condition, lock=True):
+def copy_selected(source, target):
+    descriptors = []
+    try:
+        current = os.open(source.anchor, os.O_RDONLY | os.O_DIRECTORY)
+        descriptors.append(current)
+        for part in source.parts[1:-1]:
+            current = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+            descriptors.append(current)
+        fd = os.open(source.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=current)
+        descriptors.append(fd)
+        before = os.fstat(fd)
+        if not stat.S_ISREG(before.st_mode) or source.resolve() != source:
+            raise ValueError("critical_file_scope_changed")
+        with os.fdopen(os.dup(fd), "rb") as incoming, target.open("xb") as outgoing:
+            shutil.copyfileobj(incoming, outgoing)
+        after = os.fstat(fd)
+        if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+            raise ValueError("critical_file_changed_during_copy")
+        target.chmod(0o600)
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
+
+
+def backup(*, reason, tables, files, release_condition, lock=True, max_bytes=512 * 1024**2):
     selected = validate_scope(reason, tables, files, release_condition)
     with storage_lock() if lock else nullcontext():
+        file_bytes = sum(path.stat().st_size for path, _ in selected)
+        if (
+            max_bytes <= 0
+            or file_bytes > max_bytes
+            or shutil.disk_usage(ROOT).free < max_bytes + 256 * 1024**2
+        ):
+            raise ValueError("critical_backup_space_budget_unavailable")
         folder = ROOT / (
             "critical-" + time.strftime("%Y%m%d-%H%M%S", time.gmtime()) + "-" + uuid.uuid4().hex[:8]
         )
@@ -59,26 +92,43 @@ def backup(*, reason, tables, files, release_condition, lock=True):
 
                 values = dotenv_values(APP / ".env")
                 env = pg_environment(values["DATABASE_URL"])
-                prefix = []
+                identity = {}
                 if os.geteuid() == 0 and env["PGHOST"] in {"127.0.0.1", "localhost"}:
                     env.update(PGHOST="/var/run/postgresql", PGUSER="postgres")
                     env.pop("PGPASSWORD", None)
-                    prefix = ["runuser", "-u", "postgres", "--"]
-                args = prefix + ["pg_dump", "--format=custom", "--no-owner", "--no-acl", "--strict-names"]
+                    identity = {"user": "postgres", "group": "postgres"}
+                args = [
+                    "pg_dump",
+                    "--format=custom",
+                    "--no-owner",
+                    "--no-acl",
+                    "--strict-names",
+                    "--lock-wait-timeout=15000",
+                ]
                 for name in tables:
                     args += ["--table", ".".join('"' + part + '"' for part in name.split("."))]
                 target = folder / "data.dump"
                 with target.open("wb") as stream:
-                    subprocess.run(args, env=env, stdout=stream, stderr=subprocess.PIPE, check=True)
+                    # CLI 单线程子进程设置硬输出上限；不让失败导出耗尽业务磁盘。
+                    limit = max_bytes - file_bytes
+                    subprocess.run(
+                        args,
+                        env=env,
+                        stdout=stream,
+                        stderr=subprocess.PIPE,
+                        check=True,
+                        timeout=120,
+                        preexec_fn=lambda: resource.setrlimit(resource.RLIMIT_FSIZE, (limit, limit)),
+                        **identity,
+                    )
                 target.chmod(0o600)
-                subprocess.run(["pg_restore", "--list", str(target)], check=True, capture_output=True)
+                subprocess.run(
+                    ["pg_restore", "--list", str(target)], check=True, capture_output=True, timeout=30
+                )
             for source, relative in selected:
                 target = folder / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(source, target)
-                target.chmod(0o600)
-                if sha(source) != sha(target):
-                    raise ValueError("critical_file_changed_during_copy")
+                copy_selected(source, target)
             hashes = {
                 str(p.relative_to(folder)): sha(p)
                 for p in folder.rglob("*")
@@ -104,6 +154,10 @@ def backup(*, reason, tables, files, release_condition, lock=True):
                 "restore_check": False,
             }
         except BaseException:
+            # 本次尚未执行不可逆操作；无效的部分输出没有恢复用途。
+            for child in folder.iterdir():
+                if child.name != "retention.json":
+                    shutil.rmtree(child) if child.is_dir() else child.unlink()
             register(folder, "protected", "needs_repair", "核心数据保护未完成，禁止据此执行不可逆操作")
             raise
 
@@ -115,6 +169,7 @@ def main():
     parser.add_argument("--release-condition", required=True)
     parser.add_argument("--table", action="append", default=[])
     parser.add_argument("--file", action="append", default=[])
+    parser.add_argument("--max-bytes", type=int, default=512 * 1024**2)
     args = parser.parse_args()
     os.umask(0o077)
     print(
@@ -124,6 +179,7 @@ def main():
                 tables=args.table,
                 files=args.file,
                 release_condition=args.release_condition,
+                max_bytes=args.max_bytes,
             ),
             ensure_ascii=False,
         )

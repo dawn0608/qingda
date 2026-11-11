@@ -23,6 +23,7 @@ from layout import APP, CONFIG, ROOT, require_project_identity, service_template
 from minimal_recovery import (
     activate_runtime,
     check_migration_review,
+    check_transition_devices,
     move_sources,
     protect_migration,
     restore_runtime,
@@ -407,6 +408,7 @@ def release(
     if hashlib.sha256(before).hexdigest() != spec["expected_nginx_sha256"]:
         raise RuntimeError("网关已漂移")
     python = dependency_runtime(candidate, prepared)
+    check_transition_devices(APP, stage, old, spec, python)
     url = dotenv_values(APP / ".env").get("DATABASE_URL")
     if not url:
         raise ValueError("缺少DATABASE_URL")
@@ -500,7 +502,7 @@ def release(
                 "from qingda.store import Store;from qingda.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
             )
         source_mutating = True
-        move_sources(APP, stage, old)
+        move_sources(APP, stage, old, spec)
         activate_runtime(python, APP, stage)
         for name in spec["files"]:
             source = candidate / name
@@ -576,8 +578,14 @@ def release(
         }
         (stage / "receipt.json").write_text(json.dumps(receipt, indent=2))
         switched = True
-        register(stage, "release", "completed", "运维切换完成，业务验收另记；无常规备份")
-        discard_transition(stage)
+        register(stage, "release", "awaiting_acceptance", "运维切换完成，保留小型验收回执；无常规备份")
+        try:
+            discard_transition(stage)
+        except Exception as error:
+            receipt["cleanup_pending"] = True
+            receipt["cleanup_error"] = type(error).__name__
+            (stage / "receipt.json").write_text(json.dumps(receipt, indent=2))
+            progress("released_transition_cleanup_pending")
         print(
             json.dumps(
                 {
