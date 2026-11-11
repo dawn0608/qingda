@@ -77,12 +77,12 @@ def storage_lock(path=LOCK):
 
 class Retention:
     def __init__(
-        self, root=ROOT, *, lock_path=LOCK, scan_processes=True, release_keep=3, daily_keep=7, ttl_hours=24
+        self, root=ROOT, *, lock_path=LOCK, scan_processes=True, release_keep=0, daily_keep=0, ttl_hours=24
     ):
         self.root = Path(root)
         if self.root.is_symlink() or self.root.resolve() != self.root.absolute():
             raise ValueError("unsafe_backup_root")
-        if release_keep < 0 or min(daily_keep, ttl_hours) < 1:
+        if min(release_keep, daily_keep) < 0 or ttl_hours < 1:
             raise ValueError("invalid_retention_policy")
         self.lock_path = Path(lock_path)
         self.scan_processes = scan_processes
@@ -112,7 +112,11 @@ class Retention:
                     except OSError:
                         pass
                 args = (proc / "cmdline").read_bytes().split(b"\0")
-                if any(arg.decode(errors="replace").startswith(prefix) for arg in args):
+                if any(
+                    arg.decode(errors="replace") == str(path)
+                    or arg.decode(errors="replace").startswith(prefix)
+                    for arg in args
+                ):
                     return True
             except (FileNotFoundError, ProcessLookupError):
                 pass
@@ -135,6 +139,10 @@ class Retention:
     def validate(self, path, release):
         self.safe(path)
         manifest = read_json(path / ("receipt.json" if release else "manifest.json"))
+        if release and manifest.get("format") == "qingda-release-v2":
+            if not manifest.get("revision") or not manifest.get("runtime_verified"):
+                raise ValueError("incomplete_release_receipt")
+            return
         hashes = manifest["backup_sha256"] if release else manifest
         required = RELEASE_FILES if release else DAILY_FILES - {"attachments.tar.gz"}
         if release:
@@ -176,11 +184,23 @@ class Retention:
             elif (
                 re.fullmatch(r"qingda-release-\d{8}-\d{6}", path.name)
                 and (path / "receipt.json").exists()
-                and (path / "venv-before").exists()
+                and (
+                    (path / "venv-before").exists()
+                    or read_json(path / "receipt.json").get("format") == "qingda-release-v2"
+                )
             ):
-                groups["release"].append(path)
+                if (
+                    read_json(path / "receipt.json").get("format") == "qingda-release-v2"
+                    or metadata.get("cleanup_reviewed") is True
+                ):
+                    groups["release"].append(path)
+                else:
+                    retained.append({"path": str(path), "reason": "historical_release_requires_review"})
             elif re.fullmatch(r"daily-\d{8}-\d{6}", path.name) and (path / "manifest.json").exists():
-                groups["daily"].append(path)
+                if metadata.get("cleanup_reviewed") is True:
+                    groups["daily"].append(path)
+                else:
+                    retained.append({"path": str(path), "reason": "historical_daily_requires_review"})
             elif self.transient(path) and (
                 str(path) in completed or time.time() - path.stat().st_mtime >= self.ttl
             ):
@@ -385,7 +405,7 @@ def configured():
     values = dotenv_values(APP / ".env")
     return Retention(
         release_keep=int(values.get("BACKUP_RELEASE_KEEP") or 0),
-        daily_keep=int(values.get("BACKUP_DAILY_KEEP") or 7),
+        daily_keep=int(values.get("BACKUP_DAILY_KEEP") or 0),
         ttl_hours=int(values.get("BACKUP_TRANSIENT_TTL_HOURS") or 24),
     )
 

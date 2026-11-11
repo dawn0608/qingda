@@ -43,7 +43,7 @@ def test_zero_release_retention_preserves_unaccepted_and_failed(tmp_path):
     policy = retention.Retention(root=tmp_path, scan_processes=False, release_keep=0)
     assert policy.plan()["delete"] == []
     (tmp_path / "qingda-release-20260101-000001/retention.json").write_text(
-        '{"kind":"release","state":"completed"}'
+        '{"kind":"release","state":"completed","cleanup_reviewed":true}'
     )
     assert len(policy.plan()["delete"]) == 1
 
@@ -56,7 +56,7 @@ def test_zero_release_configuration_is_supported(tmp_path, monkeypatch):
     with pytest.raises(ValueError):
         retention.Retention(root=tmp_path, release_keep=-1)
     with pytest.raises(ValueError):
-        retention.Retention(root=tmp_path, daily_keep=0)
+        retention.Retention(root=tmp_path, daily_keep=-1)
 
 
 def _lock_holder(path, event):

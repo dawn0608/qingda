@@ -19,9 +19,18 @@ from urllib.request import Request, urlopen
 from dotenv import dotenv_values
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from layout import APP, CONFIG, DATA, ROOT, require_project_identity, service_template, unit
-from proxy import Gateway, backup_state, health_url
-from storage_retention import register, sha, storage_lock
+from layout import APP, CONFIG, ROOT, require_project_identity, service_template, unit
+from minimal_recovery import (
+    activate_runtime,
+    check_migration_review,
+    check_transition_devices,
+    move_sources,
+    protect_migration,
+    restore_runtime,
+    restore_sources,
+)
+from proxy import Gateway, health_url
+from storage_retention import Retention, register, sha, storage_lock
 
 UNITS = [unit("worker"), unit("web")]
 SCHEMA_VERSION = 59
@@ -204,6 +213,16 @@ def prepare_runtime_permissions(venv):
 
 
 def dependency_runtime(candidate, prepared=None):
+    requirements = candidate / "deploy/requirements.txt"
+    current = APP / "deploy/requirements.txt"
+    if (
+        prepared is None
+        and requirements.is_file()
+        and current.is_file()
+        and sha(requirements) == sha(current)
+    ):
+        command([APP / ".venv/bin/python", "-c", "import psycopg,psycopg_pool,fastapi,PIL"])
+        return APP / ".venv/bin/python"
     if prepared:
         python = pathlib.Path(prepared) / "bin/python"
         if not python.is_file() or not python.resolve().is_relative_to(ROOT):
@@ -233,27 +252,6 @@ def dependency_runtime(candidate, prepared=None):
     )
     prepare_runtime_permissions(venv)
     return venv / "bin/python"
-
-
-def backup_files(stage, old):
-    with tarfile.open(stage / "source.tar.gz", "w:gz") as archive:
-        for name in set(old["files"]) | {"release.json"}:
-            archive.add(APP / name, arcname=name, recursive=False)
-    (stage / "files").mkdir()
-    shutil.copy2(APP / ".env", stage / "files/.env")
-    (stage / "files/.env").chmod(0o600)
-    values = dotenv_values(APP / ".env")
-    for key, default, name in [
-        ("MASTER_KEY_FILE", str(CONFIG / "master.key"), "master.key"),
-    ]:
-        shutil.copy2(values.get(key) or default, stage / name)
-        (stage / name).chmod(0o600)
-    with tarfile.open(stage / "attachments.tar.gz", "w:gz") as archive:
-        data = pathlib.Path(values.get("DATA_DIR") or str(DATA))
-        for name in ("attachments", "incoming-media"):
-            if (data / name).exists():
-                archive.add(data / name, arcname=name)
-    backup_state(stage / "proxy-state.tar.gz")
 
 
 def buffer_gateway(gateway, before):
@@ -384,6 +382,7 @@ def release(
     rehearsal_database="qingda_rehearsal",
     rollback_schema=None,
     worker_active=None,
+    migration_review=None,
 ):
     global OPERATION_LOG
     paused = (CONFIG / "outbound-paused").exists()
@@ -396,9 +395,12 @@ def release(
     candidate = stage / "candidate"
     candidate.mkdir()
     spec = extract(pathlib.Path(bundle), expected, candidate)
-    target_schema = rollback_schema or SCHEMA_VERSION
+    target_schema = rollback_schema or source_schema(candidate)
     old = check_sources(spec)
     previous_schema = source_schema(APP)
+    migration_plan = check_migration_review(
+        previous_schema, target_schema, migration_review, spec["revision"]
+    )
     require_auth_config(dotenv_values(APP / ".env"))
     gateway = Gateway()
     before = gateway.read_bytes()
@@ -406,6 +408,7 @@ def release(
     if hashlib.sha256(before).hexdigest() != spec["expected_nginx_sha256"]:
         raise RuntimeError("网关已漂移")
     python = dependency_runtime(candidate, prepared)
+    check_transition_devices(APP, stage, old, spec, python)
     url = dotenv_values(APP / ".env").get("DATABASE_URL")
     if not url:
         raise ValueError("缺少DATABASE_URL")
@@ -428,8 +431,7 @@ def release(
         print(json.dumps({"checked": True, "stage": str(stage), "revision": spec["revision"]}), flush=True)
         return
     check_sources(spec)
-    backup_files(stage, old)
-    (stage / "nginx.before.conf").write_bytes(before)
+    before_env = (APP / ".env").read_bytes()
     register(stage, "transient", "switching")
     switched = False
     buffered = False
@@ -483,16 +485,7 @@ def release(
             if command(["systemctl", "show", service, "--property=MainPID", "--value"]).strip() != b"0":
                 raise RuntimeError("业务进程尚未退出")
         progress("services_stopped")
-        run_python(
-            python,
-            candidate,
-            url,
-            "from qingda.migration import backup_database;backup_database(__import__('os').environ['DATABASE_URL'],"
-            + repr(str(stage / "qingda-before.dump"))
-            + ")",
-        )
-        if previous_schema != target_schema:
-            register(stage, "protected", "pre_migration", "结构升级前原始数据及配置；禁止旧结构回退")
+        recovery_point = protect_migration(migration_plan)
         if rollback_schema:
             align_schema(python, candidate, pg_url("qingda"), rollback_schema)
         run_python(
@@ -508,20 +501,13 @@ def release(
                 url,
                 "from qingda.store import Store;from qingda.callback_buffer import replay;s=Store(__import__('os').environ['DATABASE_URL']);replay(s);s.close()",
             )
-        old_venv = APP / ".venv"
-        if old_venv.is_symlink():
-            raise RuntimeError("未支持的现有venv符号链接")
         source_mutating = True
-        os.rename(old_venv, stage / "venv-before")
-        shutil.copytree(python.parent.parent, old_venv, symlinks=False)
-        for name in set(old["files"]) - set(spec["files"]):
-            p = APP / name
-            if p.is_file():
-                p.unlink()
+        move_sources(APP, stage, old, spec)
+        activate_runtime(python, APP, stage)
         for name in spec["files"]:
             source = candidate / name
             target = APP / name
-            ensure_source_parent(target)
+            ensure_source_parent(target, APP)
             shutil.copyfile(source, target)
             target.chmod(420)
         (APP / "release.json").write_text(
@@ -538,12 +524,7 @@ def release(
         )
         (APP / "release.json").chmod(420)
         update_env(url, spec["revision"])
-        for source in (APP / "deploy").glob("qingda-*"):
-            if source.suffix in {".service", ".timer"}:
-                target = pathlib.Path("/etc/systemd/system") / unit(source.name.removeprefix("qingda-"))
-                target.write_text(service_template(source))
-                target.chmod(0o644)
-        command(["systemctl", "daemon-reload"])
+        install_units()
         switched = False
         command(["systemctl", "start", unit("web")])
         wait_health(health_url(), spec["revision"], target_schema)
@@ -581,23 +562,15 @@ def release(
         for name, digest in spec["files"].items():
             if sha(APP / name) != digest:
                 raise RuntimeError("生产产物哈希不符：" + name)
-        hashes = {
-            name: sha(stage / name)
-            for name in (
-                "source.tar.gz",
-                "qingda-before.dump",
-                "files/.env",
-                "master.key",
-                "nginx.before.conf",
-                "attachments.tar.gz",
-                "proxy-state.tar.gz",
-            )
-        }
         receipt = {
             "revision": spec["revision"],
             "outbound_paused": paused,
             "previous_revision": old["revision"],
-            "backup_sha256": hashes,
+            "format": "qingda-release-v2",
+            "runtime_verified": True,
+            "business_verified": False,
+            "backup_sha256": {},
+            "critical_recovery_point": recovery_point,
             "database_backend": "postgresql",
             "schema_version": target_schema,
             "gateway_backend": gateway.backend,
@@ -605,14 +578,31 @@ def release(
         }
         (stage / "receipt.json").write_text(json.dumps(receipt, indent=2))
         switched = True
-        register(stage, "release", "awaiting_acceptance")
-        print(json.dumps({"released": True, "revision": spec["revision"], "backup": str(stage)}), flush=True)
+        register(stage, "release", "awaiting_acceptance", "运维切换完成，保留小型验收回执；无常规备份")
+        try:
+            discard_transition(stage)
+        except Exception as error:
+            receipt["cleanup_pending"] = True
+            receipt["cleanup_error"] = type(error).__name__
+            (stage / "receipt.json").write_text(json.dumps(receipt, indent=2))
+            progress("released_transition_cleanup_pending")
+        print(
+            json.dumps(
+                {
+                    "released": True,
+                    "revision": spec["revision"],
+                    "receipt": str(stage / "receipt.json"),
+                    "backup": None,
+                }
+            ),
+            flush=True,
+        )
     except BaseException:
         if previous_schema != target_schema:
             try:
                 actual = run_python(
-                    python,
-                    candidate,
+                    APP / ".venv/bin/python",
+                    APP,
                     pg_url("qingda"),
                     "import os,psycopg; c=psycopg.connect(os.environ['DATABASE_URL']); print(c.execute('SELECT max(version) FROM schema_versions').fetchone()[0]); c.close()",
                 )
@@ -633,23 +623,11 @@ def release(
             try:
                 if source_mutating:
                     command(["systemctl", "stop", *UNITS])
-                    if (stage / "venv-before").exists():
-                        if (APP / ".venv").exists():
-                            shutil.move(APP / ".venv", stage / "venv-incomplete")
-                        os.rename(stage / "venv-before", APP / ".venv")
-                    for name in set(spec["files"]) - set(old["files"]):
-                        (APP / name).unlink(missing_ok=True)
-                    with tarfile.open(stage / "source.tar.gz") as archive:
-                        archive.extractall(APP, filter="data")
-                    restore_environment(stage / "files/.env")
-                    for service in UNITS:
-                        source = APP / "deploy" / (service + ".service")
-                        if not source.exists():
-                            source = APP / "deploy" / ("qingda-" + service.split("-", 2)[-1] + ".service")
-                        target = pathlib.Path("/etc/systemd/system") / (service + ".service")
-                        target.write_text(service_template(source))
-                        target.chmod(0o644)
-                    command(["systemctl", "daemon-reload"])
+                    restore_runtime(APP, stage)
+                    if (stage / "transition.json").exists():
+                        restore_sources(APP, stage, spec)
+                    (APP / ".env").write_bytes(before_env)
+                    install_units()
                 align_schema(APP / ".venv/bin/python", APP, pg_url("qingda"), source_schema(APP))
                 if buffered:
                     command(["systemctl", "start", unit("web")])
@@ -675,6 +653,42 @@ def release(
             "发布失败，恢复材料继续保护",
         )
         raise
+
+
+def install_units():
+    if (
+        command(["systemctl", "show", unit("backup.timer"), "--property=LoadState", "--value"]).strip()
+        != b"not-found"
+    ):
+        command(["systemctl", "disable", "--now", unit("backup.timer")])
+    for suffix in ("backup.timer", "backup.service"):
+        (pathlib.Path("/etc/systemd/system") / unit(suffix)).unlink(missing_ok=True)
+    for source in (APP / "deploy").glob("qingda-*"):
+        if source.suffix in {".service", ".timer"}:
+            target = pathlib.Path("/etc/systemd/system") / unit(source.name.removeprefix("qingda-"))
+            target.write_text(service_template(source))
+            target.chmod(0o644)
+    command(["systemctl", "daemon-reload"])
+
+
+def discard_transition(stage):
+    """运行核验完成后回收切换材料，不触碰历史原件或例外备份。"""
+    policy = Retention(root=stage, scan_processes=pathlib.Path("/proc").exists())
+    record = stage / "runtime-transition.json"
+    if record.exists():
+        alias = pathlib.Path(json.loads(record.read_text())["alias"])
+        if alias.is_relative_to(ROOT) and alias.is_symlink() and alias.resolve() == (APP / ".venv").resolve():
+            if policy.busy(alias, ignore_current=True):
+                raise RuntimeError("prepared_runtime_alias_still_in_use")
+            alias.unlink()
+    for name in ("previous-source", "venv-before", "candidate"):
+        path = stage / name
+        if not path.exists():
+            continue
+        policy.safe(path)
+        if pathlib.Path("/proc/self/mountinfo").exists():
+            policy.deletion_safe(path, ignore_current=True)
+        shutil.rmtree(path)
 
 
 def source_schema(folder):
@@ -753,6 +767,7 @@ def main():
     p.add_argument("--check", action="store_true")
     p.add_argument("--prepared", type=pathlib.Path)
     p.add_argument("--rehearsal-database", default="qingda_rehearsal")
+    p.add_argument("--migration-review", type=pathlib.Path, help="结构变化时的已审查数据损失及例外恢复点说明")
     args = p.parse_args()
     with storage_lock():
         if args.rollback:
@@ -766,6 +781,7 @@ def main():
             args.check,
             args.prepared,
             args.rehearsal_database,
+            migration_review=args.migration_review,
         )
 
 
