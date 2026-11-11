@@ -1,4 +1,4 @@
-"""备案停站及域名切换。只复用现有发布备份、运维锁和用户绑定事务。"""
+"""备案停站及域名切换；只记录必要配置检查点，不备份业务数据。"""
 
 import argparse
 import asyncio
@@ -19,7 +19,7 @@ from layout import CONFIG, unit
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from native_nginx import CERTBOT, WEBROOT, folder_path, render_domain, run
 from ops_config import environment, write
-from proxy import ACME, APP, Gateway, backup_state, health_url
+from proxy import ACME, APP, Gateway, health_url
 from storage_retention import register, save_json, sha, storage_lock
 
 sys.path.append(str(APP / "backend"))
@@ -86,19 +86,12 @@ def prepare(folder):
     )
     save(folder, state)
     register(folder, "protected", "domain_preparing", "备案及域名切换未完成，保留最新多用户数据及恢复材料")
-    write(folder / "domain-root-env.before", (APP / ".env").read_bytes())
-    write(folder / "domain-nginx.before", Gateway().read_bytes())
-    backup_state(folder / "domain-proxy-state.tar.gz")
-    from qingda.migration import backup_database
-
-    backup_database(dotenv_values(APP / ".env")["DATABASE_URL"], folder / "domain-before.dump")
-    names = (
-        "domain-root-env.before",
-        "domain-nginx.before",
-        "domain-proxy-state.tar.gz",
-        "domain-before.dump",
-    )
-    state["backup_sha256"] = {name: sha(folder / name) for name in names}
+    values = dotenv_values(APP / ".env")
+    state["original_environment"] = {
+        key: values.get(key) for key in ("PUBLIC_URL", "COOKIE_SECURE", "ICP_FILING_NUMBER")
+    }
+    state["original_gateway_sha256"] = hashlib.sha256(Gateway().read_bytes()).hexdigest()
+    state["backup_sha256"] = {}
     state["public_ip"] = socket.gethostbyname(urlsplit(dotenv_values(APP / ".env")["PUBLIC_URL"]).hostname)
     state["counts"] = query(
         "SELECT u.id,(SELECT count(*) FROM accounts a WHERE a.user_id=u.id),(SELECT count(*) FROM message_records m WHERE m.user_id=u.id) FROM users u ORDER BY u.id"

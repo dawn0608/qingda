@@ -4,7 +4,7 @@
 
 公开版 `deploy/domain.py` 的 `DOMAIN` 使用 `example.com` 占位；使用前须明确配置为本部署的真实目标，`LINEAGE` 默认由目标域名派生，已有证书目录不同时须同步配置。占位配置不会执行运维动作。`evals/frontend/notices-contract.js` 的浏览器检查也须显式传入已授权的 `expectedOrigin`。
 
-`deploy/domain.py`保留未来域名切换的受控入口：prepare保存当前数据库、配置和网关；pause设置`/etc/qingda/outbound-paused`；approve读取真实审批证据；certificate使用Certbot；activate与bind分别启用源地址和逐用户绑定；resume在检查点确认后恢复Worker。阶段共用现有存储锁，调用前持久化意图，不确定结果须核实后处理。
+`deploy/domain.py`保留未来域名切换的受控入口：prepare只记录源地址等必要配置值和网关哈希，不复制配置或备份数据库、代理状态；pause设置`/etc/qingda/outbound-paused`；approve读取真实审批证据；certificate使用Certbot；activate与bind分别启用源地址和逐用户绑定；resume在检查点确认后恢复Worker。阶段共用现有存储锁，调用前持久化意图，不确定结果须核实后处理。
 
 停站标记阻止发布、重启或机器启动提前恢复Worker。Web可在回环提供健康检查；停站期间公网仅保留证书挑战。日备包含停站标记、域名检查点、网关和服务单元。
 
