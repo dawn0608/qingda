@@ -4,7 +4,7 @@
 
 本地仅执行必要的文档、静态检查及发布构建，不启动空数据环境做业务验收。现有 GitHub CI 执行 README 中的 Ruff、前端 Node 测试和 TypeScript/Vite 构建，无需生产数据。默认 CI 不运行完整后端回归，不证明真实模型效果、生产功能或手机实收。
 
-完整后端回归继续使用专用 Linux/PostgreSQL 隔离环境，显式配置 `TEST_DATABASE_URL` 后执行 `uv run python scripts/check.py`。数据库名必须含 `test`；夹具会建删临时 schema，部分用例还需要 root/peer、`runuser`、`psql`、Nginx、OpenSSL、FFmpeg 或已准备的浏览器构建，不能使用生产库。仅在具备这些条件且明确隔离的环境中执行该入口，不以 SQLite 替代。
+完整后端回归继续使用专用 Linux/PostgreSQL 隔离环境，显式配置 `TEST_DATABASE_URL` 后执行 `uv run python scripts/check.py`。数据库名必须含 `test`；夹具会建删临时 schema，部分用例还需要 root/peer、`runuser`、`psql`、Nginx、OpenSSL 或 FFmpeg，不能使用生产库。仅在具备这些条件且明确隔离的环境中执行该入口，不以 SQLite 替代。
 
 ## 验证与交付规则
 
@@ -12,7 +12,7 @@
 
 核心回归包括用户隔离、验证码额度、回调去重、助手草稿、回复关联与媒体、原生备份恢复。跨进程状态改动以至少两个独立进程验证重复领取、超量、取消、崩溃、过期接管及回执丢失；不对生产业务制造故障。
 
-回复上下文验收由 `backend/tests/test_reply_context.py` 对照真实 Gateway／MockTransport 请求，覆盖 Worker 修复与终止工具、哈希块、输入修订与检查点、慢写／失败／超量、旧记录、像素及用户隔离，并由两个独立写入进程验证去重、失去租约和清空后迟到结果。`evals/acceptance/chat_history_browser.py` 同时验证上下文弹框桌面／窄屏、键盘、原始请求及焦点恢复。模型请求逐轮等价比较和既有固定案例不变，不以替身结果声明真实模型效果或手机实收。
+回复上下文验收由 `backend/tests/test_reply_context.py` 对照真实 Gateway／MockTransport 请求，覆盖 Worker 修复与终止工具、哈希块、输入修订与检查点、慢写／失败／超量、旧记录、像素及用户隔离，并由两个独立写入进程验证去重、失去租约和清空后迟到结果。上下文弹框的桌面／窄屏布局、键盘操作、原始请求及焦点恢复需手动验证。模型请求逐轮等价比较和既有固定案例不变，不以替身结果声明真实模型效果或手机实收。
 
 新库与升级库比较结构、约束、RLS、权限和有效数据。生产交付核对源码、API、Worker和前端版本与哈希。
 

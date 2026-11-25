@@ -36,7 +36,6 @@
 
 - `backend/tests/test_prompt_drafts.py` 与原自动回复用例：真实隔离PostgreSQL，覆盖草稿不影响任务、原子生效、重复回执、两用户／账号隔离、HTTP认证／CSRF／上限、双进程竞争、崩溃回滚、有界等待及取消后的资源归还。
 - `frontend/tests/prompt-draft-session.test.mjs`：服务器Node状态回归，覆盖延迟回执、组合输入、连续输入、一次生效、失败恢复、外部冲突和浏览器尾稿隔离。
-- `evals/acceptance/prompt_editor_browser.py`：服务器独立Chromium与内存API夹具，覆盖原编辑规则及慢请求、刷新、错误、冲突、移动布局等51项；不替代真实接口生产验收。另以候选构建浏览器调用真实认证后端与隔离PostgreSQL，核验PUT草稿及POST生效的请求契约和时序。
 
 生产另使用现有Chrome登录态及独立标签页，核对真实数据库草稿落盘期间生效哈希／epoch不变，结束编辑后整份生效一次，刷新恢复草稿、原设定恢复和所有源码／公开产物／Web／Worker版本。保留用户原标签页未保存内容。中文组合事件及iPhone触摸为自动模拟，不声称完成实体输入法或实体Safari体验验收。
 

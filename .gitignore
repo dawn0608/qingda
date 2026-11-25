@@ -60,7 +60,4 @@ build/
 dist/
 *.tsbuildinfo
 data/
-playwright-report/
 test-results/
-output/playwright/
-.playwright-cli/
